@@ -5,9 +5,11 @@ import StarfieldBackground from "@/components/StarfieldBackground";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import MarvelIntro from "@/components/marvel/MarvelIntro";
 import MarvelPortalGrid from "@/components/marvel/MarvelPortalGrid";
+import FinalRiddlePanel from "@/components/marvel/FinalRiddlePanel";
+import IronManVideoReveal from "@/components/marvel/IronManVideoReveal";
 import MarvelFinale from "@/components/marvel/MarvelFinale";
 
-type MarvelScreen = "intro" | "puzzle" | "finale";
+type MarvelScreen = "intro" | "puzzle" | "riddle" | "video" | "finale";
 
 export default function MarvelPuzzlePage() {
   const navigate = useNavigate();
@@ -15,7 +17,15 @@ export default function MarvelPuzzlePage() {
   const alreadySolved = isSolved("marvel");
   const [screen, setScreen] = useState<MarvelScreen>(alreadySolved ? "puzzle" : "intro");
 
-  const handlePuzzleSolved = () => {
+  const handleIronManFound = () => {
+    setScreen("riddle");
+  };
+
+  const handleRiddleSolved = () => {
+    setScreen("video");
+  };
+
+  const handleVideoComplete = () => {
     markSolved("marvel");
     setScreen("finale");
   };
@@ -32,10 +42,16 @@ export default function MarvelPuzzlePage() {
         {screen === "puzzle" && (
           <MarvelPortalGrid
             key="puzzle"
-            onSolved={handlePuzzleSolved}
+            onSolved={handleIronManFound}
             alreadySolved={alreadySolved}
             onBack={() => navigate("/hub")}
           />
+        )}
+        {screen === "riddle" && (
+          <FinalRiddlePanel key="riddle" onSolved={handleRiddleSolved} />
+        )}
+        {screen === "video" && (
+          <IronManVideoReveal key="video" onContinue={handleVideoComplete} />
         )}
         {screen === "finale" && (
           <MarvelFinale key="finale" onReturn={() => navigate("/hub")} />
