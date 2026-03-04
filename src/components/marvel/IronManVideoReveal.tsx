@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Props {
@@ -7,6 +7,7 @@ interface Props {
 
 export default function IronManVideoReveal({ onContinue }: Props) {
   const [phase, setPhase] = useState<"flare" | "text" | "video">("flare");
+  const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase("text"), 800);
@@ -16,6 +17,13 @@ export default function IronManVideoReveal({ onContinue }: Props) {
       clearTimeout(t2);
     };
   }, []);
+
+  // Show button after video duration (~2:30 = 150s, adding buffer for intro transitions)
+  useEffect(() => {
+    if (phase !== "video") return;
+    const timer = setTimeout(() => setShowButton(true), 150000);
+    return () => clearTimeout(timer);
+  }, [phase]);
 
   return (
     <motion.div
@@ -95,22 +103,33 @@ export default function IronManVideoReveal({ onContinue }: Props) {
             "In one future… we win."
           </motion.p>
 
-          <motion.button
-            onClick={onContinue}
-            className="px-10 py-4 rounded-full font-body font-semibold text-lg cursor-pointer
-              transition-all duration-300 hover:scale-105"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
-            whileTap={{ scale: 0.95 }}
-            style={{
-              background: "linear-gradient(135deg, hsl(var(--marvel-gold)), hsl(var(--marvel-red)))",
-              color: "hsl(var(--primary-foreground))",
-              boxShadow: "0 0 40px hsl(var(--marvel-gold) / 0.5)",
-            }}
-          >
-            Restore the Multiverse
-          </motion.button>
+          {showButton ? (
+            <motion.button
+              onClick={onContinue}
+              className="px-10 py-4 rounded-full font-body font-semibold text-lg cursor-pointer
+                transition-all duration-300 hover:scale-105"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                background: "linear-gradient(135deg, hsl(var(--marvel-gold)), hsl(var(--marvel-red)))",
+                color: "hsl(var(--primary-foreground))",
+                boxShadow: "0 0 40px hsl(var(--marvel-gold) / 0.5)",
+              }}
+            >
+              Restore the Multiverse
+            </motion.button>
+          ) : (
+            <motion.p
+              className="font-body text-sm text-muted-foreground"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              transition={{ delay: 2 }}
+            >
+              Watch the full video to continue…
+            </motion.p>
+          )}
         </motion.div>
       )}
     </motion.div>
