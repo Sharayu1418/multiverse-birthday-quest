@@ -94,7 +94,7 @@ export default function MarvelFinale({ onReturn }: Props) {
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5, duration: 0.8 }}
       >
-        The one future where we win has been found. The universe is safe.
+        The timeline is stable again.
       </motion.p>
 
       {showMessage && (
@@ -104,6 +104,19 @@ export default function MarvelFinale({ onReturn }: Props) {
           transition={{ duration: 0.8 }}
           className="space-y-6"
         >
+          {/* Birthday message area */}
+          <div
+            className="px-8 py-6 rounded-2xl max-w-md mx-auto mb-4"
+            style={{
+              background: "hsl(var(--marvel-gold) / 0.05)",
+              border: "1px solid hsl(var(--marvel-gold) / 0.2)",
+            }}
+          >
+            <p className="text-muted-foreground font-body text-base italic">
+              🎂 Your birthday message goes here. 🌟
+            </p>
+          </div>
+
           <motion.button
             onClick={onReturn}
             className="px-10 py-4 rounded-full font-body font-semibold text-lg cursor-pointer

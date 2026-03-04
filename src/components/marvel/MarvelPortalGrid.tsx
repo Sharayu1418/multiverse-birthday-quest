@@ -40,7 +40,9 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
 
     if (hero.isCorrect) {
       setFoundIronMan(true);
-      setTimeout(() => setShowSnapText(true), 1500);
+      setTimeout(() => {
+        setShowSnapText(true);
+      }, 1500);
     }
   };
 
