@@ -4,12 +4,13 @@ import { useNavigate } from "react-router-dom";
 import StarfieldBackground from "@/components/StarfieldBackground";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import MarvelIntro from "@/components/marvel/MarvelIntro";
+import DoctorStrangeVisionRiddle from "@/components/marvel/DoctorStrangeVisionRiddle";
 import MarvelPortalGrid from "@/components/marvel/MarvelPortalGrid";
 import FinalRiddlePanel from "@/components/marvel/FinalRiddlePanel";
 import IronManVideoReveal from "@/components/marvel/IronManVideoReveal";
 import MarvelFinale from "@/components/marvel/MarvelFinale";
 
-type MarvelScreen = "intro" | "puzzle" | "riddle" | "video" | "finale";
+type MarvelScreen = "intro" | "vision" | "puzzle" | "riddle" | "video" | "finale";
 
 export default function MarvelPuzzlePage() {
   const navigate = useNavigate();
@@ -37,7 +38,10 @@ export default function MarvelPuzzlePage() {
 
       <AnimatePresence mode="wait">
         {screen === "intro" && (
-          <MarvelIntro key="intro" onStart={() => setScreen("puzzle")} />
+          <MarvelIntro key="intro" onStart={() => setScreen("vision")} />
+        )}
+        {screen === "vision" && (
+          <DoctorStrangeVisionRiddle key="vision" onSolved={() => setScreen("puzzle")} />
         )}
         {screen === "puzzle" && (
           <MarvelPortalGrid
