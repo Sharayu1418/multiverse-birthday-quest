@@ -6,124 +6,87 @@ interface Props {
 }
 
 export default function IronManVideoReveal({ onContinue }: Props) {
-  const [phase, setPhase] = useState<"flare" | "text" | "video">("flare");
-  const [showButton, setShowButton] = useState(false);
+  const [phase, setPhase] = useState<"text" | "video" | "button">("text");
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("text"), 800);
-    const t2 = setTimeout(() => setPhase("video"), 2300);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    // Show text for 3s, then go fullscreen video
+    const t = setTimeout(() => setPhase("video"), 3000);
+    return () => clearTimeout(t);
   }, []);
 
-  // Show button after video duration (~2:30 = 150s, adding buffer for intro transitions)
   useEffect(() => {
     if (phase !== "video") return;
-    const timer = setTimeout(() => setShowButton(true), 150000);
-    return () => clearTimeout(timer);
+    // Streamable video is ~2:30. Show button after 155s
+    const t = setTimeout(() => setPhase("button"), 155000);
+    return () => clearTimeout(t);
   }, [phase]);
 
   return (
     <motion.div
-      className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* Portal flare */}
-      <AnimatePresence>
-        {phase === "flare" && (
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
+      <AnimatePresence mode="wait">
+        {phase === "text" && (
+          <motion.p
+            key="text"
+            className="font-display text-2xl sm:text-4xl font-bold text-center max-w-lg px-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="w-40 h-40 rounded-full"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: [0, 3, 0.5], opacity: [0, 1, 0] }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              style={{
-                background: "radial-gradient(circle, hsl(var(--marvel-gold)), hsl(var(--marvel-red) / 0.5), transparent)",
-                boxShadow: "0 0 100px hsl(var(--marvel-gold) / 0.8)",
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Reveal text */}
-      {(phase === "text" || phase === "video") && (
-        <motion.p
-          className="font-display text-xl sm:text-3xl font-bold mb-8 max-w-lg"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: phase === "video" ? 0.6 : 1 }}
-          transition={{ duration: 0.8 }}
-          style={{
-            color: "hsl(var(--marvel-gold))",
-            textShadow: "0 0 30px hsl(var(--marvel-gold) / 0.6)",
-          }}
-        >
-          "The future Strange saw… has arrived."
-        </motion.p>
-      )}
-
-      {/* Video */}
-      {phase === "video" && (
-        <motion.div
-          className="w-full max-w-2xl space-y-8"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <div
-            className="relative w-full rounded-2xl overflow-hidden"
+            transition={{ duration: 0.8 }}
             style={{
-              aspectRatio: "16/9",
-              boxShadow: "0 0 60px hsl(var(--marvel-gold) / 0.3)",
+              color: "hsl(var(--marvel-gold))",
+              textShadow: "0 0 40px hsl(var(--marvel-gold) / 0.6)",
             }}
           >
+            "The future Strange saw… has arrived."
+          </motion.p>
+        )}
+
+        {(phase === "video" || phase === "button") && (
+          <motion.div
+            key="video"
+            className="absolute inset-0 flex flex-col items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+          >
             <iframe
-              className="absolute inset-0 w-full h-full"
+              ref={iframeRef}
+              className="w-full h-full"
               src="https://streamable.com/e/c19pp1?autoplay=1"
               title="Marvel Video"
               frameBorder="0"
               allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen
+              style={{ position: "absolute", inset: 0 }}
             />
-          </div>
 
-          <motion.p
-            className="font-body text-lg text-muted-foreground italic"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            "In one future… we win."
-          </motion.p>
-
-          <motion.button
-            onClick={showButton ? onContinue : undefined}
-            disabled={!showButton}
-            className="px-10 py-4 rounded-full font-body font-semibold text-lg
-              transition-all duration-300"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            whileTap={showButton ? { scale: 0.95 } : {}}
-            style={{
-              background: "linear-gradient(135deg, hsl(var(--marvel-gold)), hsl(var(--marvel-red)))",
-              color: "hsl(var(--primary-foreground))",
-              boxShadow: "0 0 40px hsl(var(--marvel-gold) / 0.5)",
-              opacity: showButton ? 1 : 0.4,
-              cursor: showButton ? "pointer" : "not-allowed",
-            }}
-          >
-            Restore the Multiverse
-          </motion.button>
-        </motion.div>
-      )}
+            {phase === "button" && (
+              <motion.button
+                onClick={onContinue}
+                className="absolute bottom-12 px-10 py-4 rounded-full font-body font-semibold text-lg
+                  cursor-pointer z-10 hover:scale-105 transition-transform"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  background: "linear-gradient(135deg, hsl(var(--marvel-gold)), hsl(var(--marvel-red)))",
+                  color: "hsl(var(--primary-foreground))",
+                  boxShadow: "0 0 40px hsl(var(--marvel-gold) / 0.5)",
+                }}
+              >
+                Restore the Multiverse
+              </motion.button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
