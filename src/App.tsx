@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import IntroPage from "./pages/IntroPage";
 import HubPage from "./pages/HubPage";
 import PuzzlePage from "./pages/PuzzlePage";
+import MarvelPuzzlePage from "./pages/MarvelPuzzlePage";
 import FinalePage from "./pages/FinalePage";
 import NotFound from "./pages/NotFound";
 
@@ -20,6 +21,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<IntroPage />} />
           <Route path="/hub" element={<HubPage />} />
+          <Route path="/world/marvel" element={<MarvelPuzzlePage />} />
           <Route path="/world/:worldId" element={<PuzzlePage />} />
           <Route path="/finale" element={<FinalePage />} />
           <Route path="*" element={<NotFound />} />
