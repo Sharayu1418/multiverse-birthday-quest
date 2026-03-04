@@ -26,9 +26,7 @@ export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronM
       disabled={isOpened || foundIronMan}
       className="relative aspect-square rounded-full flex flex-col items-center justify-center cursor-pointer
         disabled:cursor-default transition-all duration-300 group"
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.08, duration: 0.4, type: "spring" }}
+      initial={{ opacity: 1, scale: 1 }}
       whileHover={!isOpened && !foundIronMan ? { scale: 1.08 } : {}}
       whileTap={!isOpened && !foundIronMan ? { scale: 0.95 } : {}}
       style={{
