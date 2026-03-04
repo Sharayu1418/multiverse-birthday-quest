@@ -30,7 +30,7 @@ interface Props {
 }
 
 export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Props) {
-  const [opened, setOpened] = useState<Set<number>>(new Set());
+  const [opened, setOpened] = useState<Set<number>>(new Set(alreadySolved ? HEROES.map(h => h.id) : []));
   const [foundIronMan, setFoundIronMan] = useState(alreadySolved);
   const [showSnapText, setShowSnapText] = useState(false);
 
