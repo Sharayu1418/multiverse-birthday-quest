@@ -41,8 +41,8 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
     if (hero.isCorrect) {
       setFoundIronMan(true);
       setTimeout(() => {
-        setShowSnapText(true);
-      }, 1500);
+        onSolved();
+      }, 2000);
     }
   };
 
@@ -112,54 +112,6 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
         ))}
       </div>
 
-      {/* Iron Man found sequence */}
-      {foundIronMan && showSnapText && (
-        <motion.div
-          className="text-center space-y-4 mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <motion.p
-            className="font-body text-lg text-muted-foreground italic"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            "In one future… he snaps."
-          </motion.p>
-
-          <motion.p
-            className="font-display text-2xl sm:text-3xl font-bold"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 1 }}
-            style={{
-              color: "hsl(var(--marvel-gold))",
-              textShadow: "0 0 30px hsl(var(--marvel-gold) / 0.7)",
-            }}
-          >
-            "I am Iron Man."
-          </motion.p>
-
-          <motion.button
-            onClick={onSolved}
-            className="mt-4 px-10 py-4 rounded-full font-body font-semibold text-lg cursor-pointer
-              transition-all duration-300 hover:scale-105"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.8, duration: 0.6 }}
-            whileTap={{ scale: 0.95 }}
-            style={{
-              background: "linear-gradient(135deg, hsl(var(--marvel-gold)), hsl(var(--marvel-red)))",
-              color: "hsl(var(--primary-foreground))",
-              boxShadow: "0 0 40px hsl(var(--marvel-gold) / 0.5)",
-            }}
-          >
-            Restore the Multiverse
-          </motion.button>
-        </motion.div>
-      )}
     </motion.div>
   );
 }
