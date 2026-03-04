@@ -103,33 +103,25 @@ export default function IronManVideoReveal({ onContinue }: Props) {
             "In one future… we win."
           </motion.p>
 
-          {showButton ? (
-            <motion.button
-              onClick={onContinue}
-              className="px-10 py-4 rounded-full font-body font-semibold text-lg cursor-pointer
-                transition-all duration-300 hover:scale-105"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                background: "linear-gradient(135deg, hsl(var(--marvel-gold)), hsl(var(--marvel-red)))",
-                color: "hsl(var(--primary-foreground))",
-                boxShadow: "0 0 40px hsl(var(--marvel-gold) / 0.5)",
-              }}
-            >
-              Restore the Multiverse
-            </motion.button>
-          ) : (
-            <motion.p
-              className="font-body text-sm text-muted-foreground"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              transition={{ delay: 2 }}
-            >
-              Watch the full video to continue…
-            </motion.p>
-          )}
+          <motion.button
+            onClick={showButton ? onContinue : undefined}
+            disabled={!showButton}
+            className="px-10 py-4 rounded-full font-body font-semibold text-lg
+              transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            whileTap={showButton ? { scale: 0.95 } : {}}
+            style={{
+              background: "linear-gradient(135deg, hsl(var(--marvel-gold)), hsl(var(--marvel-red)))",
+              color: "hsl(var(--primary-foreground))",
+              boxShadow: "0 0 40px hsl(var(--marvel-gold) / 0.5)",
+              opacity: showButton ? 1 : 0.4,
+              cursor: showButton ? "pointer" : "not-allowed",
+            }}
+          >
+            Restore the Multiverse
+          </motion.button>
         </motion.div>
       )}
     </motion.div>
