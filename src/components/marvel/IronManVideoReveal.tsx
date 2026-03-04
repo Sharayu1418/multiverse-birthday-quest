@@ -86,8 +86,8 @@ export default function IronManVideoReveal({ onContinue }: Props) {
           >
             <iframe
               className="absolute inset-0 w-full h-full"
-              src="https://www.youtube.com/embed/TWB31WFomz4?autoplay=1&rel=0"
-              title="Iron Man Snap Scene"
+              src="https://drive.google.com/file/d/1ew7zJDPdOyK86J5HvDRuoM1-UeGRsKPt/preview"
+              title="Marvel Video"
               frameBorder="0"
               allow="autoplay; encrypted-media"
               allowFullScreen
