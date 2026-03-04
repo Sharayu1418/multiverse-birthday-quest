@@ -18,7 +18,7 @@ export default function IronManVideoReveal({ onContinue }: Props) {
   useEffect(() => {
     if (phase !== "video") return;
     // Streamable video is ~2:30. Show button after 155s
-    const t = setTimeout(() => setPhase("button"), 155000);
+    const t = setTimeout(() => setPhase("button"), 10000);
     return () => clearTimeout(t);
   }, [phase]);
 
