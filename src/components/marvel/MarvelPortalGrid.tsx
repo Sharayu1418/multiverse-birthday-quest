@@ -15,11 +15,11 @@ const HEROES: HeroData[] = [
   { id: 1, name: "Thor", emoji: "⚡", isCorrect: false, failMessage: "Even the thunder cannot save this future." },
   { id: 2, name: "Captain America", emoji: "🛡️", isCorrect: false, failMessage: "We gave it everything… but this isn't the one." },
   { id: 3, name: "Hulk", emoji: "💚", isCorrect: false, failMessage: "Hulk tried. Hulk still lose." },
-  { id: 4, name: "Spider-Man", emoji: "🕷️", isCorrect: false, failMessage: "That future fails." },
-  { id: 5, name: "Black Widow", emoji: "🖤", isCorrect: false, failMessage: "Not this one." },
-  { id: 6, name: "Doctor Strange", emoji: "🔮", isCorrect: false, failMessage: "We lose in this timeline." },
-  { id: 7, name: "Ant-Man", emoji: "🐜", isCorrect: false, failMessage: "That future fails." },
-  { id: 8, name: "Scarlet Witch", emoji: "❤️‍🔥", isCorrect: false, failMessage: "Not this one." },
+  { id: 4, name: "Spider-Man", emoji: "🕷️", isCorrect: false, failMessage: "Ms. Shivani… I don't think this timeline works." },
+  { id: 5, name: "Black Widow", emoji: "🖤", isCorrect: false, failMessage: "This mission fails. Try another timeline." },
+  { id: 6, name: "Doctor Strange", emoji: "🔮", isCorrect: false, failMessage: "I've seen this future… and it ends in defeat." },
+  { id: 7, name: "Ant-Man", emoji: "🐜", isCorrect: false, failMessage: "Okay… that timeline got really weird really fast." },
+  { id: 8, name: "Scarlet Witch", emoji: "❤️‍🔥", isCorrect: false, failMessage: "This reality breaks… and everyone loses." },
   { id: 9, name: "Iron Man", emoji: "🦾", isCorrect: true, failMessage: "" },
 ];
 
