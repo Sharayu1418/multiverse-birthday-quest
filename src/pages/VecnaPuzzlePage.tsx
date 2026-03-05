@@ -1,5 +1,5 @@
-import VecnaClockSignal from "@/components/stranger/VecnaClockSignal";
+import VecnaClockReversal from "@/components/stranger/vecna/VecnaClockReversal";
 
 export default function VecnaPuzzlePage() {
-  return <VecnaClockSignal />;
+  return <VecnaClockReversal />;
 }
