@@ -4,6 +4,7 @@ interface HeroData {
   id: number;
   name: string;
   emoji: string;
+  image?: string;
   isCorrect: boolean;
   failMessage: string;
 }
@@ -71,7 +72,11 @@ export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronM
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, type: "spring" }}
         >
-          <span className="text-3xl sm:text-4xl">{hero.emoji}</span>
+          {hero.image ? (
+            <img src={hero.image} alt={hero.name} className="w-16 h-16 sm:w-20 sm:h-20 object-contain" />
+          ) : (
+            <span className="text-3xl sm:text-4xl">{hero.emoji}</span>
+          )}
           <span
             className="font-body text-xs sm:text-sm font-medium px-2 text-center"
             style={{

@@ -2,20 +2,23 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import MarvelPortalCard from "./MarvelPortalCard";
+import spidermanImg from "@/assets/heroes/spiderman.png";
+import captainAmericaImg from "@/assets/heroes/captain_america.png";
 
 interface HeroData {
   id: number;
   name: string;
   emoji: string;
+  image?: string;
   isCorrect: boolean;
   failMessage: string;
 }
 
 const HEROES: HeroData[] = [
   { id: 1, name: "Thor", emoji: "⚡", isCorrect: false, failMessage: "Even the thunder cannot save this future." },
-  { id: 2, name: "Captain America", emoji: "🛡️", isCorrect: false, failMessage: "We gave it everything… but this isn't the one." },
+  { id: 2, name: "Captain America", emoji: "🛡️", image: captainAmericaImg, isCorrect: false, failMessage: "We gave it everything… but this isn't the one." },
   { id: 3, name: "Hulk", emoji: "💚", isCorrect: false, failMessage: "Hulk tried. Hulk still lose." },
-  { id: 4, name: "Spider-Man", emoji: "🕷️", isCorrect: false, failMessage: "Ms. Shivani… I don't think this timeline works." },
+  { id: 4, name: "Spider-Man", emoji: "🕷️", image: spidermanImg, isCorrect: false, failMessage: "Ms. Shivani… I don't think this timeline works." },
   { id: 5, name: "Black Widow", emoji: "🖤", isCorrect: false, failMessage: "This mission fails. Try another timeline." },
   { id: 6, name: "Doctor Strange", emoji: "🔮", isCorrect: false, failMessage: "I've seen this future… and it ends in defeat." },
   { id: 7, name: "Ant-Man", emoji: "🐜", isCorrect: false, failMessage: "Okay… that timeline got really weird really fast." },
