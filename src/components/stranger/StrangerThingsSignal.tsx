@@ -12,10 +12,10 @@ type Phase = "intro" | "glitch" | "video" | "decode" | "solved" | "portal";
 const FLASH_SEQUENCE = [20, 8, 5, 7, 1, 20, 5, 9, 19, 15, 16, 5, 14, 14, 5, 23, 25, 15, 18, 11, 9, 19, 14, 5, 24, 20];
 const CORRECT_ANSWER = "THE GATE IS OPEN NEW YORK IS NEXT";
 
-// Simulated "video" duration in ms
-const VIDEO_DURATION = 11000;
-// How long each number flashes
-const FLASH_DURATION = 200;
+// Only flash a teaser subset of the sequence during the video phase
+const TEASER_COUNT = 5;
+const VIDEO_DURATION = 4000;
+const FLASH_DURATION = 250;
 
 const CREEPING_VINES = [
   { d: "M0,0 Q20,60 5,120 Q-15,180 10,240 Q30,300 5,360", side: "left" as const, w: 60, h: 400 },
@@ -72,27 +72,26 @@ export default function StrangerThingsSignal() {
     return () => clearTimeout(t);
   }, [phase]);
 
-  // Phase 2: Video with flashing numbers
+  // Phase 2: Video with only a few teaser flashes
   useEffect(() => {
     if (phase !== "video") return;
 
-    const interval = VIDEO_DURATION / FLASH_SEQUENCE.length;
+    const teaser = FLASH_SEQUENCE.slice(0, TEASER_COUNT);
+    const interval = VIDEO_DURATION / teaser.length;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    FLASH_SEQUENCE.forEach((num, i) => {
-      // Show number
+    teaser.forEach((num, i) => {
       timers.push(setTimeout(() => {
         setCurrentFlash(num);
-        setRevealedNumbers(prev => [...prev, num]);
       }, i * interval));
-      // Hide number
       timers.push(setTimeout(() => {
         setCurrentFlash(null);
       }, i * interval + FLASH_DURATION));
     });
 
-    // Transition to decode phase
+    // Transition to decode phase — reveal all numbers at once there
     timers.push(setTimeout(() => {
+      setRevealedNumbers([...FLASH_SEQUENCE]);
       setPhase("decode");
     }, VIDEO_DURATION + 500));
 
