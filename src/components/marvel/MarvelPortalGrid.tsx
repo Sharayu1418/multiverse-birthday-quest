@@ -6,7 +6,7 @@ import spidermanImg from "@/assets/heroes/spiderman.png";
 import captainAmericaImg from "@/assets/heroes/captain_america.png";
 import thorImg from "@/assets/heroes/thor.jpg";
 import blackWidowImg from "@/assets/heroes/black_widow.jpg";
-import scarletWitchImg from "@/assets/heroes/scarlet_witch.jpg";
+import scarletWitchImg from "@/assets/heroes/scarlet_witch.png";
 
 interface HeroData {
   id: number;
