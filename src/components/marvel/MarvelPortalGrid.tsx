@@ -196,7 +196,7 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
 
       {/* Portal Grid — layoutId drives visible shuffle animation */}
       <LayoutGroup>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5 mb-8">
+        <div className="grid grid-cols-3 gap-3 sm:gap-5 mb-8">
           {cards.map((card, index) => (
             <motion.div
               key={card.isOpened ? `opened-${index}` : `card-${card.cardId}`}
