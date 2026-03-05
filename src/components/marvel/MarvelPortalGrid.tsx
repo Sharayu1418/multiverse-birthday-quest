@@ -4,7 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import MarvelPortalCard from "./MarvelPortalCard";
 import spidermanImg from "@/assets/heroes/spiderman.png";
 import captainAmericaImg from "@/assets/heroes/captain_america.png";
-import thorImg from "@/assets/heroes/thor.jpg";
+import thorImg from "@/assets/heroes/thor.png";
+import ironManImg from "@/assets/heroes/iron_man.png";
 import blackWidowImg from "@/assets/heroes/black_widow.png";
 import scarletWitchImg from "@/assets/heroes/scarlet_witch.png";
 import hulkImg from "@/assets/heroes/hulk.png";
@@ -31,7 +32,7 @@ const WRONG_HEROES: HeroData[] = [
   { id: 8, name: "Scarlet Witch", emoji: "❤️‍🔥", image: scarletWitchImg, isCorrect: false, failMessage: "This reality breaks… and everyone loses." },
 ];
 
-const IRON_MAN: HeroData = { id: 9, name: "Iron Man", emoji: "🦾", isCorrect: true, failMessage: "" };
+const IRON_MAN: HeroData = { id: 9, name: "Iron Man", emoji: "🦾", image: ironManImg, isCorrect: true, failMessage: "" };
 
 const ALL_HEROES = [...WRONG_HEROES, IRON_MAN];
 
