@@ -6,6 +6,7 @@ import ClockFace from "./ClockFace";
 import PortalRift from "./PortalRift";
 import ColorSequenceDisplay, { type ToneColor, COLOR_MAP } from "./ColorSequenceDisplay";
 import SequenceInputButtons from "./SequenceInputButtons";
+import { playSuccessAudio } from "./successAudio";
 
 type Phase = "entry" | "playing" | "input" | "success";
 
@@ -166,13 +167,20 @@ export default function VecnaClockReversal() {
   );
 
   // ─── SUCCESS ───
+  const successAudioRef = useRef<{ stop: () => void } | null>(null);
+
   useEffect(() => {
     if (phase !== "success") return;
     const t1 = setTimeout(() => setClockCracked(true), 500);
     const t2 = setTimeout(() => setLightningStrike(true), 1200);
     const t3 = setTimeout(() => setLightningStrike(false), 1600);
     const t4 = setTimeout(() => setVinesRetreat(true), 1400);
-    const t5 = setTimeout(() => setClockSpinning(true), 2000);
+    // Clock starts spinning → trigger synth audio (synced: 2s of spin)
+    const t5 = setTimeout(() => {
+      setClockSpinning(true);
+      successAudioRef.current = playSuccessAudio();
+    }, 2000);
+    // Clock stops at 11:11 → audio cuts abruptly (handled inside successAudio at 2s mark)
     const t6 = setTimeout(() => { setClockSpinning(false); setClockStopped(true); }, 4000);
     const t7 = setTimeout(() => {
       const start = Date.now();
@@ -183,7 +191,10 @@ export default function VecnaClockReversal() {
       };
       requestAnimationFrame(animate);
     }, 2200);
-    return () => { [t1, t2, t3, t4, t5, t6, t7].forEach(clearTimeout); };
+    return () => {
+      [t1, t2, t3, t4, t5, t6, t7].forEach(clearTimeout);
+      if (successAudioRef.current) successAudioRef.current.stop();
+    };
   }, [phase]);
 
   const isSuccess = phase === "success";
