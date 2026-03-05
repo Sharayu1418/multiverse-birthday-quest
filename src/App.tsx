@@ -9,6 +9,7 @@ import PuzzlePage from "./pages/PuzzlePage";
 import MarvelPuzzlePage from "./pages/MarvelPuzzlePage";
 import PotterPuzzlePage from "./pages/PotterPuzzlePage";
 import StrangerPuzzlePage from "./pages/StrangerPuzzlePage";
+import StrangerSignalPage from "./pages/StrangerSignalPage";
 import FinalePage from "./pages/FinalePage";
 import NotFound from "./pages/NotFound";
 
