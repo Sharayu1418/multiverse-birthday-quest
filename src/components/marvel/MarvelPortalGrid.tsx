@@ -9,6 +9,7 @@ import blackWidowImg from "@/assets/heroes/black_widow.png";
 import scarletWitchImg from "@/assets/heroes/scarlet_witch.png";
 import hulkImg from "@/assets/heroes/hulk.png";
 import doctorStrangeImg from "@/assets/heroes/doctor_strange.jpg";
+import antManImg from "@/assets/heroes/ant_man.jpg";
 
 interface HeroData {
   id: number;
@@ -26,7 +27,7 @@ const WRONG_HEROES: HeroData[] = [
   { id: 4, name: "Spider-Man", emoji: "🕷️", image: spidermanImg, isCorrect: false, failMessage: "Ms. Shivani… I don't think this timeline works." },
   { id: 5, name: "Black Widow", emoji: "🖤", image: blackWidowImg, isCorrect: false, failMessage: "This mission fails. Try another timeline." },
   { id: 6, name: "Doctor Strange", emoji: "🔮", image: doctorStrangeImg, isCorrect: false, failMessage: "I've seen this future… and it ends in defeat." },
-  { id: 7, name: "Ant-Man", emoji: "🐜", isCorrect: false, failMessage: "Okay… that timeline got really weird really fast." },
+  { id: 7, name: "Ant-Man", emoji: "🐜", image: antManImg, isCorrect: false, failMessage: "Okay… that timeline got really weird really fast." },
   { id: 8, name: "Scarlet Witch", emoji: "❤️‍🔥", image: scarletWitchImg, isCorrect: false, failMessage: "This reality breaks… and everyone loses." },
 ];
 
