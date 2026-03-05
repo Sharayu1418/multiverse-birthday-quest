@@ -28,7 +28,7 @@ const App = () => (
           <Route path="/world/marvel" element={<MarvelPuzzlePage />} />
           <Route path="/world/potter" element={<PotterPuzzlePage />} />
           <Route path="/world/stranger" element={<StrangerPuzzlePage />} />
-          <Route path="/world/stranger-signal" element={<StrangerSignalPage />} />
+          <Route path="/world/stranger-things" element={<StrangerSignalPage />} />
           <Route path="/world/stranger-vecna" element={<VecnaPuzzlePage />} />
           <Route path="/world/:worldId" element={<PuzzlePage />} />
           <Route path="/finale" element={<FinalePage />} />
