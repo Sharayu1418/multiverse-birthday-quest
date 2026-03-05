@@ -5,6 +5,7 @@ import { useGameProgress } from "@/hooks/useGameProgress";
 import ForbiddenForestBackground from "./ForbiddenForestBackground";
 import WandLight from "./WandLight";
 import HiddenLetters from "./HiddenLetters";
+import SpellBar from "./SpellBar";
 import SpellRearrange from "./SpellRearrange";
 import { ArrowLeft } from "lucide-react";
 
@@ -16,6 +17,7 @@ export default function HarryPotterForbiddenForest() {
   const alreadySolved = isSolved("potter");
   const [phase, setPhase] = useState<Phase>(alreadySolved ? "complete" : "explore");
   const [wandPos, setWandPos] = useState({ x: -1000, y: -1000 });
+  const [discoveredLetters, setDiscoveredLetters] = useState<string[]>([]);
   const [showHint, setShowHint] = useState(true);
 
   const handleWandMove = useCallback((x: number, y: number) => {
@@ -23,7 +25,15 @@ export default function HarryPotterForbiddenForest() {
     setShowHint(false);
   }, []);
 
+  const handleLetterFound = useCallback((letter: string) => {
+    setDiscoveredLetters((prev) => {
+      if (prev.includes(letter)) return prev;
+      return [...prev, letter];
+    });
+  }, []);
+
   const handleAllFound = useCallback(() => {
+    // Only transition when truly all 5 letters collected
     setPhase("rearrange");
   }, []);
 
@@ -65,8 +75,10 @@ export default function HarryPotterForbiddenForest() {
               wandEnabled
               wandX={wandPos.x}
               wandY={wandPos.y}
+              onLetterFound={handleLetterFound}
               onAllFound={handleAllFound}
             />
+            <SpellBar discovered={discoveredLetters} total={5} />
             {showHint && (
               <motion.p
                 className="fixed top-16 left-1/2 -translate-x-1/2 text-muted-foreground text-sm font-body z-20 text-center px-4"
@@ -84,7 +96,7 @@ export default function HarryPotterForbiddenForest() {
         {phase === "rearrange" && (
           <SpellRearrange
             key="rearrange"
-            discoveredLetters={["M", "S", "L", "O", "U"]} // Will show jumbled first
+            discoveredLetters={discoveredLetters}
             onComplete={handleRearrangeComplete}
           />
         )}
