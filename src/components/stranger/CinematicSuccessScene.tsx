@@ -132,14 +132,14 @@ export default function CinematicSuccessScene() {
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url(${skylineImg})`,
-            filter: "brightness(0.35) contrast(1.3) saturate(0.3)",
+            filter: "brightness(0.55) contrast(1.2) saturate(0.35)",
           }}
         />
         {/* Red/dark cinematic overlay */}
         <div
           className="absolute inset-0"
           style={{
-            background: "linear-gradient(180deg, hsl(0 30% 5% / 0.7) 0%, hsl(0 20% 3% / 0.4) 40%, hsl(0 40% 8% / 0.6) 100%)",
+            background: "linear-gradient(180deg, hsl(0 30% 5% / 0.5) 0%, hsl(0 20% 3% / 0.2) 40%, hsl(0 40% 8% / 0.4) 100%)",
           }}
         />
         {/* Subtle pan animation - makes the photo feel alive */}
@@ -208,97 +208,18 @@ export default function CinematicSuccessScene() {
         )}
       </AnimatePresence>
 
-      {/* Dimensional portal tear in the sky */}
-      <div className="absolute top-[8%] left-1/2 -translate-x-1/2 z-10">
-        {/* Outer glow */}
-        <motion.div
-          className="relative"
-          style={{
-            width: 80 + portalOpen * 200,
-            height: 30 + portalOpen * 120,
-          }}
-          animate={{ opacity: [0.7, 1, 0.7] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          {/* Red glow halo */}
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: `radial-gradient(ellipse, hsl(0 80% 30% / ${0.3 + portalOpen * 0.4}), hsl(0 60% 15% / ${portalOpen * 0.3}), transparent 70%)`,
-              filter: `blur(${10 + portalOpen * 20}px)`,
-              transform: `scale(${1.5 + portalOpen * 0.5})`,
-            }}
-          />
-
-          {/* Tear shape */}
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              clipPath: `polygon(${50 - portalOpen * 20}% 0%, ${50 + portalOpen * 20}% 0%, ${50 + portalOpen * 25}% 50%, ${50 + portalOpen * 20}% 100%, ${50 - portalOpen * 20}% 100%, ${50 - portalOpen * 25}% 50%)`,
-              background: `linear-gradient(180deg, hsl(0 70% 15%), hsl(0 90% 8%), hsl(0 70% 15%))`,
-              boxShadow: `inset 0 0 ${20 + portalOpen * 40}px hsl(0 80% 25% / 0.6)`,
-            }}
-          />
-
-          {/* Inner void */}
-          <motion.div
-            className="absolute inset-[15%]"
-            style={{
-              clipPath: `polygon(${50 - portalOpen * 15}% 5%, ${50 + portalOpen * 15}% 5%, ${50 + portalOpen * 18}% 50%, ${50 + portalOpen * 15}% 95%, ${50 - portalOpen * 15}% 95%, ${50 - portalOpen * 18}% 50%)`,
-              background: `radial-gradient(ellipse, hsl(0 100% 5%), hsl(0 50% 2%))`,
-            }}
-            animate={{ opacity: [0.8, 1, 0.8] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          />
-
-          {/* Energy tendrils from portal */}
-          {portalOpen > 0.3 && Array.from({ length: 8 }).map((_, i) => {
-            const angle = (i / 8) * Math.PI * 2;
-            const len = 20 + portalOpen * 60 + Math.random() * 30;
-            return (
-              <motion.div
-                key={i}
-                className="absolute"
-                style={{
-                  width: 2,
-                  height: len,
-                  left: "50%",
-                  top: "50%",
-                  transformOrigin: "top center",
-                  transform: `rotate(${angle}rad)`,
-                  background: `linear-gradient(to bottom, hsl(0 70% 40% / ${0.5 * portalOpen}), transparent)`,
-                  filter: "blur(1px)",
-                }}
-                animate={{ opacity: [0.2, 0.7, 0.2], height: [len * 0.8, len, len * 0.8] }}
-                transition={{ duration: 1 + Math.random(), repeat: Infinity, delay: i * 0.15 }}
-              />
-            );
-          })}
-        </motion.div>
-
-        {/* Dark smoke around portal */}
-        {portalOpen > 0.2 && smokeParticles.map((p) => (
-          <motion.div
-            key={p.id}
-            className="absolute rounded-full"
-            style={{
-              width: p.size * portalOpen,
-              height: p.size * portalOpen,
-              left: `calc(50% + ${Math.cos(p.angle) * p.distance * portalOpen}px)`,
-              top: `calc(50% + ${Math.sin(p.angle) * p.distance * portalOpen}px)`,
-              background: `radial-gradient(circle, hsl(0 30% 10% / ${0.4 * portalOpen}), transparent)`,
-              filter: "blur(4px)",
-            }}
-            animate={{
-              x: [0, Math.cos(p.angle) * 20, 0],
-              y: [0, Math.sin(p.angle) * 20 - 10, 0],
-              opacity: [0.2, 0.5 * portalOpen, 0.2],
-              scale: [0.8, 1.2, 0.8],
-            }}
-            transition={{ duration: p.duration, repeat: Infinity, delay: p.delay }}
-          />
-        ))}
-      </div>
+      {/* Removed portal tear — just red glow in sky */}
+      <motion.div
+        className="absolute top-[5%] left-1/2 -translate-x-1/2 z-10 rounded-full"
+        style={{
+          width: 200 + portalOpen * 150,
+          height: 80 + portalOpen * 60,
+          background: `radial-gradient(ellipse, hsl(0 80% 25% / ${0.2 + portalOpen * 0.25}), transparent 70%)`,
+          filter: `blur(${20 + portalOpen * 15}px)`,
+        }}
+        animate={{ opacity: [0.5, 0.8, 0.5] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
 
       {/* Floating spores */}
       <div className="absolute inset-0 z-[5] pointer-events-none">
