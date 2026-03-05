@@ -229,9 +229,6 @@ export default function DoctorStrangeVisionRiddle({ onSolved }: Props) {
               <p className="font-body text-sm sm:text-base leading-relaxed" style={{ color: "hsl(var(--foreground) / 0.85)" }}>
                 The sorcerer beside you searched through millions of futures.
               </p>
-              <p className="font-body text-sm sm:text-base leading-relaxed" style={{ color: "hsl(var(--foreground) / 0.85)" }}>
-                But one future remained.
-              </p>
               <p className="font-body text-sm sm:text-base italic text-muted-foreground">
                 Read what survives when all other futures collapse.
               </p>
