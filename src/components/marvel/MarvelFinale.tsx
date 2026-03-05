@@ -85,7 +85,7 @@ export default function MarvelFinale({ onReturn }: Props) {
           textShadow: "0 0 30px hsl(var(--marvel-gold) / 0.6)",
         }}
       >
-        Multiverse Restored
+        Marvel Timeline Restored
       </motion.h2>
 
       <motion.p
@@ -94,7 +94,7 @@ export default function MarvelFinale({ onReturn }: Props) {
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5, duration: 0.8 }}
       >
-        The timeline is stable again.
+        The Marvel timeline is stable again.
       </motion.p>
 
       {showMessage && (
