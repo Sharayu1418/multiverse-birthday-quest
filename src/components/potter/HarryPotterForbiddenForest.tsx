@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useGameProgress } from "@/hooks/useGameProgress";
@@ -8,33 +8,19 @@ import HiddenLetters from "./HiddenLetters";
 import SpellRearrange from "./SpellRearrange";
 import { ArrowLeft } from "lucide-react";
 
-type Phase = "intro" | "explore" | "rearrange" | "illuminated" | "complete";
+type Phase = "explore" | "rearrange" | "illuminated" | "complete";
 
 export default function HarryPotterForbiddenForest() {
   const navigate = useNavigate();
   const { markSolved, isSolved } = useGameProgress();
   const alreadySolved = isSolved("potter");
-  const [phase, setPhase] = useState<Phase>(alreadySolved ? "complete" : "intro");
-  const [introLine, setIntroLine] = useState(0);
+  const [phase, setPhase] = useState<Phase>(alreadySolved ? "complete" : "explore");
   const [wandPos, setWandPos] = useState({ x: -1000, y: -1000 });
-  const discoveredRef = useRef<string[]>([]);
-
-  const introLines = [
-    "You have entered the Forbidden Forest.",
-    "The path forward is hidden in darkness.",
-    "Only one spell reveals the way.",
-  ];
-
-  const handleIntroComplete = () => {
-    if (introLine < introLines.length - 1) {
-      setIntroLine((l) => l + 1);
-    } else {
-      setPhase("explore");
-    }
-  };
+  const [showHint, setShowHint] = useState(true);
 
   const handleWandMove = useCallback((x: number, y: number) => {
     setWandPos({ x, y });
+    setShowHint(false);
   }, []);
 
   const handleAllFound = useCallback(() => {
@@ -66,43 +52,6 @@ export default function HarryPotterForbiddenForest() {
       </motion.button>
 
       <AnimatePresence mode="wait">
-        {/* INTRO */}
-        {phase === "intro" && (
-          <motion.div
-            key="intro"
-            className="fixed inset-0 flex items-center justify-center z-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="text-center px-6 max-w-xl cursor-pointer" onClick={handleIntroComplete}>
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={introLine}
-                  className="font-display text-xl sm:text-3xl font-bold leading-relaxed"
-                  style={{
-                    color: "hsl(42 70% 70%)",
-                    textShadow: "0 0 20px hsl(42 60% 40% / 0.5)",
-                  }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.8 }}
-                >
-                  {introLines[introLine]}
-                </motion.p>
-              </AnimatePresence>
-              <motion.p
-                className="text-muted-foreground text-sm mt-8 font-body"
-                animate={{ opacity: [0.3, 0.7, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                Tap to continue
-              </motion.p>
-            </div>
-          </motion.div>
-        )}
-
         {/* EXPLORE - wand light + hidden letters */}
         {phase === "explore" && (
           <motion.div
@@ -118,14 +67,16 @@ export default function HarryPotterForbiddenForest() {
               wandY={wandPos.y}
               onAllFound={handleAllFound}
             />
-            <motion.p
-              className="fixed top-16 left-1/2 -translate-x-1/2 text-muted-foreground text-sm font-body z-20 text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              transition={{ delay: 1 }}
-            >
-              Move your wand to find the hidden letters
-            </motion.p>
+            {showHint && (
+              <motion.p
+                className="fixed top-16 left-1/2 -translate-x-1/2 text-muted-foreground text-sm font-body z-20 text-center px-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.7 }}
+                transition={{ delay: 0.5 }}
+              >
+                Move your wand through the forest to find the hidden spell
+              </motion.p>
+            )}
           </motion.div>
         )}
 
