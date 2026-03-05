@@ -315,7 +315,8 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
               Iron Man
             </span>
             <span
-              className="font-body text-[9px] sm:text-xs italic px-3 text-center leading-tight text-muted-foreground"
+              className="font-body text-[10px] sm:text-sm italic font-semibold px-3 text-center leading-tight"
+              style={{ color: "hsl(var(--marvel-gold))", textShadow: "0 0 10px hsl(var(--marvel-gold) / 0.5)" }}
             >
               "Sometimes you gotta run before you can walk."
             </span>
