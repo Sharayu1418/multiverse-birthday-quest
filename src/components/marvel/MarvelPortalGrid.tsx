@@ -7,6 +7,8 @@ import captainAmericaImg from "@/assets/heroes/captain_america.png";
 import thorImg from "@/assets/heroes/thor.jpg";
 import blackWidowImg from "@/assets/heroes/black_widow.png";
 import scarletWitchImg from "@/assets/heroes/scarlet_witch.png";
+import hulkImg from "@/assets/heroes/hulk.png";
+import doctorStrangeImg from "@/assets/heroes/doctor_strange.jpg";
 
 interface HeroData {
   id: number;
@@ -20,10 +22,10 @@ interface HeroData {
 const WRONG_HEROES: HeroData[] = [
   { id: 1, name: "Thor", emoji: "⚡", image: thorImg, isCorrect: false, failMessage: "Even the thunder cannot save this future." },
   { id: 2, name: "Captain America", emoji: "🛡️", image: captainAmericaImg, isCorrect: false, failMessage: "We gave it everything… but this isn't the one." },
-  { id: 3, name: "Hulk", emoji: "💚", isCorrect: false, failMessage: "Hulk tried. Hulk still lose." },
+  { id: 3, name: "Hulk", emoji: "💚", image: hulkImg, isCorrect: false, failMessage: "Hulk tried. Hulk still lose." },
   { id: 4, name: "Spider-Man", emoji: "🕷️", image: spidermanImg, isCorrect: false, failMessage: "Ms. Shivani… I don't think this timeline works." },
   { id: 5, name: "Black Widow", emoji: "🖤", image: blackWidowImg, isCorrect: false, failMessage: "This mission fails. Try another timeline." },
-  { id: 6, name: "Doctor Strange", emoji: "🔮", isCorrect: false, failMessage: "I've seen this future… and it ends in defeat." },
+  { id: 6, name: "Doctor Strange", emoji: "🔮", image: doctorStrangeImg, isCorrect: false, failMessage: "I've seen this future… and it ends in defeat." },
   { id: 7, name: "Ant-Man", emoji: "🐜", isCorrect: false, failMessage: "Okay… that timeline got really weird really fast." },
   { id: 8, name: "Scarlet Witch", emoji: "❤️‍🔥", image: scarletWitchImg, isCorrect: false, failMessage: "This reality breaks… and everyone loses." },
 ];
