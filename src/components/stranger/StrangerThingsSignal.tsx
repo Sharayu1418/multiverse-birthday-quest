@@ -582,28 +582,10 @@ export default function StrangerThingsSignal() {
           </motion.div>
         )}
 
-        {/* ===== SOLVED PHASE ===== */}
-        {phase === "solved" && (
-          <motion.div key="solved" className="fixed inset-0 z-30 flex items-center justify-center"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <motion.div className="absolute inset-0"
-              animate={{ x: [-3, 3, -4, 2, 0], y: [-2, 3, -1, 2, 0] }}
-              transition={{ duration: 0.25, repeat: 8 }}
-              style={{ background: "hsl(0 15% 5%)" }} />
-            <motion.div className="absolute inset-0"
-              animate={{ opacity: [0, 0.4, 0, 0.6, 0, 0.3, 0] }}
-              transition={{ duration: 0.4, repeat: 6 }}
-              style={{ background: "hsl(0 80% 40% / 0.2)" }} />
-            <motion.p className="relative z-10 font-mono text-xl sm:text-3xl font-bold text-center px-4"
-              style={{ color: "hsl(0 75% 55%)", textShadow: "0 0 25px hsl(0 80% 40%), 0 0 50px hsl(0 70% 30%)" }}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
-              THE GATE IS OPEN
-            </motion.p>
-          </motion.div>
+        {/* ===== SOLVED / PORTAL — Cinematic NY Scene ===== */}
+        {(phase === "solved" || phase === "portal") && (
+          <CinematicSuccessScene />
         )}
-
-        {/* ===== PORTAL PHASE ===== */}
-        {phase === "portal" && <PortalRift />}
       </AnimatePresence>
     </div>
   );
