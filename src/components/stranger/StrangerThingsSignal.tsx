@@ -449,14 +449,14 @@ export default function StrangerThingsSignal() {
         {/* ===== DECODE PHASE ===== */}
         {phase === "decode" && (
           <motion.div key="decode"
-            className="relative z-20 min-h-screen flex flex-col items-center justify-center px-4 py-8 gap-6"
+            className="relative z-20 h-screen flex flex-col items-center justify-center px-3 py-2 gap-2"
             initial={{ rotateX: 0, opacity: 0 }}
             animate={{ rotateX: 180, opacity: 1 }}
             transition={{ duration: 1, ease: "easeInOut" }}
             style={{ perspective: "1000px" }}>
 
             {isMobile && (
-              <motion.p className="text-xs font-mono text-center"
+              <motion.p className="text-[10px] font-mono text-center"
                 style={{ color: "hsl(0 50% 50%)", transform: "rotateX(180deg)" }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: [0, 0.7, 0] }}
@@ -465,37 +465,35 @@ export default function StrangerThingsSignal() {
               </motion.p>
             )}
 
-            {/* Alphabet wall */}
-            <ChristmasLightAlphabet highlightedLetters={[]} blinkingLetter={null} flipped />
+            {/* Combined content - all in one flipped container */}
+            <div className="flex flex-col items-center gap-2 w-full max-w-md" style={{ transform: "rotateX(180deg)" }}>
 
-            {/* Instruction + recalled numbers */}
-            <motion.div className="text-center space-y-3 max-w-md"
-              style={{ transform: "rotateX(180deg)" }}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-              <p className="font-mono text-sm" style={{ color: "hsl(0 70% 60%)" }}>
-                The Upside Down speaks through lights.
-              </p>
-              <p className="font-mono text-xs" style={{ color: "hsl(0 45% 45%)" }}>
-                Find the letters the signal points to.
-              </p>
+              {/* Instruction text */}
+              <div className="text-center">
+                <p className="font-mono text-xs sm:text-sm" style={{ color: "hsl(0 70% 60%)" }}>
+                  The Upside Down speaks through lights.
+                </p>
+                <p className="font-mono text-[10px] sm:text-xs" style={{ color: "hsl(0 45% 45%)" }}>
+                  Find the letters the signal points to.
+                </p>
+              </div>
 
-              {/* Radio transmission style numbers */}
-              <div className="w-full max-w-sm mx-auto rounded border px-4 py-3 space-y-1.5"
+              {/* Radio transmission style numbers - compact */}
+              <div className="w-full max-w-xs mx-auto rounded border px-3 py-2 space-y-0.5"
                 style={{
                   background: "hsl(0 10% 5% / 0.8)",
                   borderColor: "hsl(0 30% 18%)",
                   boxShadow: "inset 0 0 20px hsl(0 20% 5% / 0.5), 0 0 10px hsl(0 40% 15% / 0.3)",
                 }}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-mono text-[9px] tracking-[0.3em] uppercase" style={{ color: "hsl(0 40% 35%)" }}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-mono text-[8px] tracking-[0.3em] uppercase" style={{ color: "hsl(0 40% 35%)" }}>
                     ▸ INCOMING TRANSMISSION
                   </span>
-                  <motion.span className="font-mono text-[9px]" style={{ color: "hsl(0 60% 45%)" }}
+                  <motion.span className="font-mono text-[8px]" style={{ color: "hsl(0 60% 45%)" }}
                     animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity }}>
                     ● REC
                   </motion.span>
                 </div>
-                {/* Word groups displayed as radio lines */}
                 {(() => {
                   const wordBreaks = [3, 7, 9, 13, 17, 21];
                   const lines: number[][] = [];
@@ -509,19 +507,19 @@ export default function StrangerThingsSignal() {
                   });
                   if (current.length > 0) lines.push(current);
                   return lines.map((line, li) => (
-                    <motion.div key={li} className="flex items-center gap-1"
+                    <motion.div key={li} className="flex items-center gap-0.5"
                       initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: li * 0.15 }}>
-                      <span className="font-mono text-[10px] mr-1.5 select-none" style={{ color: "hsl(0 30% 30%)" }}>▸</span>
+                      transition={{ delay: li * 0.1 }}>
+                      <span className="font-mono text-[9px] mr-1 select-none" style={{ color: "hsl(0 30% 30%)" }}>▸</span>
                       {line.map((num, ni) => (
                         <motion.span key={ni}
-                          className="font-mono text-sm sm:text-base font-bold tracking-widest"
+                          className="font-mono text-xs sm:text-sm font-bold tracking-wider"
                           style={{
                             color: "hsl(0 75% 55%)",
                             textShadow: "0 0 8px hsl(0 70% 40% / 0.6)",
                           }}
                           initial={{ opacity: 0 }} animate={{ opacity: [0.4, 1] }}
-                          transition={{ delay: li * 0.15 + ni * 0.05, duration: 0.3 }}>
+                          transition={{ delay: li * 0.1 + ni * 0.04, duration: 0.3 }}>
                           {num}{ni < line.length - 1 && (
                             <span className="mx-0.5" style={{ color: "hsl(0 30% 30%)" }}>·</span>
                           )}
@@ -530,57 +528,57 @@ export default function StrangerThingsSignal() {
                     </motion.div>
                   ));
                 })()}
-                {/* Static bar at bottom */}
-                <motion.div className="h-px mt-2" style={{ background: "hsl(0 30% 20%)" }}
-                  animate={{ opacity: [0.3, 0.6, 0.3], scaleX: [0.8, 1, 0.8] }}
-                  transition={{ duration: 2, repeat: Infinity }} />
               </div>
-            </motion.div>
 
-            {/* Input field */}
-            <motion.form onSubmit={handleSubmit}
-              className="space-y-3 w-full max-w-sm"
-              style={{ transform: "rotateX(180deg)" }}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
-              <label className="block text-center font-mono text-xs tracking-wider uppercase"
-                style={{ color: "hsl(0 50% 45%)" }}>
-                Enter the message from the signal
-              </label>
-              <motion.div animate={shake ? { x: [-8, 8, -8, 8, 0] } : {}}>
-                <input type="text" value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Type the decoded message..."
-                  className="w-full px-4 py-3 rounded-lg border font-mono text-center text-sm tracking-wider uppercase focus:outline-none focus:ring-2 transition-all"
+              {/* Alphabet wall - compact */}
+              <div className="transform scale-[0.8] sm:scale-90 origin-center">
+                <ChristmasLightAlphabet highlightedLetters={[]} blinkingLetter={null} flipped={false} />
+              </div>
+
+              {/* Input field */}
+              <motion.form onSubmit={handleSubmit}
+                className="space-y-2 w-full max-w-xs"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
+                <label className="block text-center font-mono text-[10px] sm:text-xs tracking-wider uppercase"
+                  style={{ color: "hsl(0 50% 45%)" }}>
+                  Enter the message from the signal
+                </label>
+                <motion.div animate={shake ? { x: [-8, 8, -8, 8, 0] } : {}}>
+                  <input type="text" value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="Type the decoded message..."
+                    className="w-full px-3 py-2 rounded-lg border font-mono text-center text-xs sm:text-sm tracking-wider uppercase focus:outline-none focus:ring-2 transition-all"
+                    style={{
+                      background: "hsl(0 10% 8%)",
+                      borderColor: `hsl(0 ${40 + monsterProximity * 30}% ${25 + monsterProximity * 15}%)`,
+                      color: "hsl(0 70% 65%)",
+                      boxShadow: monsterProximity > 0.5
+                        ? `0 0 ${monsterProximity * 15}px hsl(0 60% 20% / ${monsterProximity * 0.5})`
+                        : "none",
+                    }}
+                    autoComplete="off" />
+                </motion.div>
+
+                <motion.button type="submit"
+                  className="w-full py-2 rounded-lg font-mono font-bold text-xs uppercase tracking-wider cursor-pointer hover:scale-[1.02] transition-transform"
                   style={{
-                    background: "hsl(0 10% 8%)",
-                    borderColor: `hsl(0 ${40 + monsterProximity * 30}% ${25 + monsterProximity * 15}%)`,
-                    color: "hsl(0 70% 65%)",
-                    boxShadow: monsterProximity > 0.5
-                      ? `0 0 ${monsterProximity * 15}px hsl(0 60% 20% / ${monsterProximity * 0.5})`
-                      : "none",
+                    background: "linear-gradient(135deg, hsl(0 60% 30%), hsl(0 70% 20%))",
+                    color: "hsl(0 70% 70%)",
+                    boxShadow: "0 0 15px hsl(0 60% 20% / 0.5)",
                   }}
-                  autoComplete="off" />
-              </motion.div>
+                  whileTap={{ scale: 0.98 }}>
+                  Decode Signal
+                </motion.button>
 
-              <motion.button type="submit"
-                className="w-full py-3 rounded-lg font-mono font-bold text-sm uppercase tracking-wider cursor-pointer hover:scale-[1.02] transition-transform"
-                style={{
-                  background: "linear-gradient(135deg, hsl(0 60% 30%), hsl(0 70% 20%))",
-                  color: "hsl(0 70% 70%)",
-                  boxShadow: "0 0 15px hsl(0 60% 20% / 0.5)",
-                }}
-                whileTap={{ scale: 0.98 }}>
-                Decode Signal
-              </motion.button>
-
-              {hint && (
-                <motion.p className="text-xs font-mono text-center"
-                  style={{ color: "hsl(0 50% 45%)" }}
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  1=A, 2=B ... 26=Z — decode ALL numbers into a full sentence
-                </motion.p>
-              )}
-            </motion.form>
+                {hint && (
+                  <motion.p className="text-[10px] font-mono text-center"
+                    style={{ color: "hsl(0 50% 45%)" }}
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    1=A, 2=B ... 26=Z — decode ALL numbers into a full sentence
+                  </motion.p>
+                )}
+              </motion.form>
+            </div>
           </motion.div>
         )}
 
