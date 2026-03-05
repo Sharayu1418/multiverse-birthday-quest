@@ -68,6 +68,7 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
   });
 
   const [foundIronMan, setFoundIronMan] = useState(alreadySolved);
+  const [showCenterReveal, setShowCenterReveal] = useState(false);
 
   // Shuffle only unopened cards' positions every 1.8s
   const shuffleUnopened = useCallback(() => {
@@ -138,8 +139,9 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
 
     if (unopenedCount <= 1) {
       setFoundIronMan(true);
-      // Delay to let the reveal play, then trigger onSolved
-      setTimeout(() => onSolved(), 4000);
+      // 3s delay for reading the card, then show center reveal
+      setTimeout(() => setShowCenterReveal(true), 3000);
+      setTimeout(() => onSolved(), 7000);
     }
   };
 
@@ -208,12 +210,23 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
           {cards.map((card, index) => {
             const isTheIronMan = index === ironManIndex;
 
+            // Hide Iron Man from grid once center reveal starts
+            if (isTheIronMan && showCenterReveal) {
+              return (
+                <motion.div
+                  key={`iron-hidden-${index}`}
+                  animate={{ opacity: 0, scale: 0 }}
+                  transition={{ duration: 0.5 }}
+                />
+              );
+            }
+
             if (foundIronMan && !isTheIronMan) {
               return (
                 <motion.div
                   key={`fading-${index}`}
                   animate={{ opacity: 0, scale: 0.3 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
+                  transition={{ duration: 0.8, delay: showCenterReveal ? 0 : 0.2 }}
                   className="pointer-events-none"
                 >
                   <MarvelPortalCard
@@ -250,19 +263,19 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
       </LayoutGroup>
 
       {/* Iron Man center reveal overlay */}
-      {foundIronMan && (
+      {showCenterReveal && (
         <motion.div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.5 }}
+          transition={{ duration: 0.5 }}
         >
           {/* Glow backdrop */}
           <motion.div
             className="absolute inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 1 }}
+            transition={{ delay: 0.3, duration: 1 }}
             style={{
               background: "radial-gradient(circle, hsl(var(--marvel-gold) / 0.15) 0%, transparent 70%)",
             }}
@@ -273,7 +286,7 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
             className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full flex flex-col items-center justify-center overflow-hidden"
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.8, type: "spring", stiffness: 150, damping: 15 }}
+            transition={{ delay: 0.3, duration: 0.8, type: "spring", stiffness: 150, damping: 15 }}
             style={{
               background: "radial-gradient(circle, hsl(40 90% 55% / 0.3), hsl(0 80% 50% / 0.15), hsl(var(--card) / 0.9))",
               border: "3px solid hsl(var(--marvel-gold) / 0.8)",
@@ -313,7 +326,7 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
             className="font-display text-lg sm:text-2xl font-bold mt-6 text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2, duration: 0.6 }}
+            transition={{ delay: 1, duration: 0.6 }}
             style={{ color: "hsl(var(--marvel-gold))", textShadow: "0 0 20px hsl(var(--marvel-gold) / 0.5)" }}
           >
             This is the one future where we win.
