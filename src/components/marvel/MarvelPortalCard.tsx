@@ -67,29 +67,41 @@ export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronM
       {/* Content */}
       {isOpened ? (
         <motion.div
-          className="flex flex-col items-center gap-1"
+          className="absolute inset-0 rounded-full flex flex-col items-center justify-center overflow-hidden"
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, type: "spring" }}
         >
+          {/* Background image fills circle */}
           {hero.image ? (
-            <img src={hero.image} alt={hero.name} className="w-16 h-16 sm:w-20 sm:h-20 object-contain" />
+            <img
+              src={hero.image}
+              alt={hero.name}
+              className="absolute inset-0 w-full h-full object-cover rounded-full"
+            />
           ) : (
-            <span className="text-3xl sm:text-4xl">{hero.emoji}</span>
+            <span className="text-4xl sm:text-5xl mb-1">{hero.emoji}</span>
           )}
-          <span
-            className="font-body text-xs sm:text-sm font-medium px-2 text-center"
-            style={{
-              color: isCorrect ? "hsl(var(--marvel-gold))" : "hsl(var(--muted-foreground))",
-            }}
-          >
-            {hero.name}
-          </span>
-          {!isCorrect && (
-            <span className="font-body text-[10px] sm:text-xs italic text-marvel-red/80 px-2 text-center">
-              {hero.failMessage}
+
+          {/* Overlay gradient for text readability */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+          {/* Text on top */}
+          <div className="relative z-10 flex flex-col items-center mt-auto pb-3 sm:pb-4 px-2">
+            <span
+              className="font-body text-xs sm:text-sm font-bold text-center drop-shadow-lg"
+              style={{ color: isCorrect ? "hsl(var(--marvel-gold))" : "#fff" }}
+            >
+              {hero.name}
             </span>
-          )}
+            {!isCorrect && (
+              <span className="font-body text-[9px] sm:text-[11px] italic text-center leading-tight mt-0.5 drop-shadow-lg"
+                style={{ color: "hsl(var(--marvel-gold) / 0.9)" }}
+              >
+                {hero.failMessage}
+              </span>
+            )}
+          </div>
         </motion.div>
       ) : (
         <motion.div
