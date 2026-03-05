@@ -5,7 +5,7 @@ import MarvelPortalCard from "./MarvelPortalCard";
 import spidermanImg from "@/assets/heroes/spiderman.png";
 import captainAmericaImg from "@/assets/heroes/captain_america.png";
 import thorImg from "@/assets/heroes/thor.jpg";
-import blackWidowImg from "@/assets/heroes/black_widow.jpg";
+import blackWidowImg from "@/assets/heroes/black_widow.png";
 import scarletWitchImg from "@/assets/heroes/scarlet_witch.png";
 
 interface HeroData {
