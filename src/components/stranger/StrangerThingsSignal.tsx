@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useIsMobile } from "@/hooks/use-mobile";
 import ChristmasLightAlphabet from "./ChristmasLightAlphabet";
-import PortalRift from "./PortalRift";
+import CinematicSuccessScene from "./CinematicSuccessScene";
 import { ArrowLeft } from "lucide-react";
 
 type Phase = "glitch" | "video" | "decode" | "solved" | "portal";
