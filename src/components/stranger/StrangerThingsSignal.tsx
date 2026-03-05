@@ -226,6 +226,26 @@ export default function StrangerThingsSignal() {
           backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(0 0% 0% / 0.08) 2px, hsl(0 0% 0% / 0.08) 4px)",
         }} />
 
+      {/* Intro video */}
+      <AnimatePresence>
+        {phase === "intro" && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+          >
+            <video
+              ref={introVideoRef}
+              className="w-full h-full object-contain"
+              src="/videos/joyce_christmas_lights.mp4"
+              playsInline
+              muted={false}
+              style={{ background: "black" }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Glitch entry */}
       <AnimatePresence>
         {phase === "glitch" && (
