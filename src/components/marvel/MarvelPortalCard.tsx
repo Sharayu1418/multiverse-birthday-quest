@@ -73,7 +73,7 @@ export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronM
           transition={{ duration: 0.4, type: "spring" }}
         >
           {hero.image ? (
-            <img src={hero.image} alt={hero.name} className="w-16 h-16 sm:w-20 sm:h-20 object-contain mix-blend-multiply dark:mix-blend-screen brightness-110" />
+            <img src={hero.image} alt={hero.name} className="w-16 h-16 sm:w-20 sm:h-20 object-contain" />
           ) : (
             <span className="text-3xl sm:text-4xl">{hero.emoji}</span>
           )}
