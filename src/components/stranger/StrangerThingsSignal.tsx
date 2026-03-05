@@ -473,26 +473,67 @@ export default function StrangerThingsSignal() {
               style={{ transform: "rotateX(180deg)" }}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
               <p className="font-mono text-sm" style={{ color: "hsl(0 70% 60%)" }}>
-                Decode the signal. Each number = a letter in the alphabet.
+                The Upside Down speaks through lights.
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-1.5">
-                {revealedNumbers.map((num, i) => {
-                  // Add visual separators for word boundaries
-                  const wordBreaks = [3, 7, 9, 13, 17, 21]; // indices where spaces would be
-                  return (
-                    <span key={i} className="inline-flex items-center">
-                      {wordBreaks.includes(i) && (
-                        <span className="mx-1.5 font-mono text-xs" style={{ color: "hsl(0 30% 30%)" }}>|</span>
-                      )}
-                      <motion.span className="font-mono text-sm sm:text-base font-bold px-1"
-                        style={{ color: "hsl(0 60% 50%)", textShadow: "0 0 5px hsl(0 60% 40% / 0.4)" }}
-                        initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.03 }}>
-                        {num}
-                      </motion.span>
-                    </span>
-                  );
-                })}
+              <p className="font-mono text-xs" style={{ color: "hsl(0 45% 45%)" }}>
+                Find the letters the signal points to.
+              </p>
+
+              {/* Radio transmission style numbers */}
+              <div className="w-full max-w-sm mx-auto rounded border px-4 py-3 space-y-1.5"
+                style={{
+                  background: "hsl(0 10% 5% / 0.8)",
+                  borderColor: "hsl(0 30% 18%)",
+                  boxShadow: "inset 0 0 20px hsl(0 20% 5% / 0.5), 0 0 10px hsl(0 40% 15% / 0.3)",
+                }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-mono text-[9px] tracking-[0.3em] uppercase" style={{ color: "hsl(0 40% 35%)" }}>
+                    ▸ INCOMING TRANSMISSION
+                  </span>
+                  <motion.span className="font-mono text-[9px]" style={{ color: "hsl(0 60% 45%)" }}
+                    animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity }}>
+                    ● REC
+                  </motion.span>
+                </div>
+                {/* Word groups displayed as radio lines */}
+                {(() => {
+                  const wordBreaks = [3, 7, 9, 13, 17, 21];
+                  const lines: number[][] = [];
+                  let current: number[] = [];
+                  revealedNumbers.forEach((num, i) => {
+                    if (wordBreaks.includes(i) && current.length > 0) {
+                      lines.push(current);
+                      current = [];
+                    }
+                    current.push(num);
+                  });
+                  if (current.length > 0) lines.push(current);
+                  return lines.map((line, li) => (
+                    <motion.div key={li} className="flex items-center gap-1"
+                      initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: li * 0.15 }}>
+                      <span className="font-mono text-[10px] mr-1.5 select-none" style={{ color: "hsl(0 30% 30%)" }}>▸</span>
+                      {line.map((num, ni) => (
+                        <motion.span key={ni}
+                          className="font-mono text-sm sm:text-base font-bold tracking-widest"
+                          style={{
+                            color: "hsl(0 75% 55%)",
+                            textShadow: "0 0 8px hsl(0 70% 40% / 0.6)",
+                          }}
+                          initial={{ opacity: 0 }} animate={{ opacity: [0.4, 1] }}
+                          transition={{ delay: li * 0.15 + ni * 0.05, duration: 0.3 }}>
+                          {num}{ni < line.length - 1 && (
+                            <span className="mx-0.5" style={{ color: "hsl(0 30% 30%)" }}>·</span>
+                          )}
+                        </motion.span>
+                      ))}
+                    </motion.div>
+                  ));
+                })()}
+                {/* Static bar at bottom */}
+                <motion.div className="h-px mt-2" style={{ background: "hsl(0 30% 20%)" }}
+                  animate={{ opacity: [0.3, 0.6, 0.3], scaleX: [0.8, 1, 0.8] }}
+                  transition={{ duration: 2, repeat: Infinity }} />
               </div>
             </motion.div>
 
