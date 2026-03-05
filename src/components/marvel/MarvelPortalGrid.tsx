@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import MarvelPortalCard from "./MarvelPortalCard";
 import spidermanImg from "@/assets/heroes/spiderman.png";
@@ -17,7 +17,7 @@ interface HeroData {
   failMessage: string;
 }
 
-const HEROES: HeroData[] = [
+const WRONG_HEROES: HeroData[] = [
   { id: 1, name: "Thor", emoji: "⚡", image: thorImg, isCorrect: false, failMessage: "Even the thunder cannot save this future." },
   { id: 2, name: "Captain America", emoji: "🛡️", image: captainAmericaImg, isCorrect: false, failMessage: "We gave it everything… but this isn't the one." },
   { id: 3, name: "Hulk", emoji: "💚", isCorrect: false, failMessage: "Hulk tried. Hulk still lose." },
@@ -26,8 +26,20 @@ const HEROES: HeroData[] = [
   { id: 6, name: "Doctor Strange", emoji: "🔮", isCorrect: false, failMessage: "I've seen this future… and it ends in defeat." },
   { id: 7, name: "Ant-Man", emoji: "🐜", isCorrect: false, failMessage: "Okay… that timeline got really weird really fast." },
   { id: 8, name: "Scarlet Witch", emoji: "❤️‍🔥", image: scarletWitchImg, isCorrect: false, failMessage: "This reality breaks… and everyone loses." },
-  { id: 9, name: "Iron Man", emoji: "🦾", isCorrect: true, failMessage: "" },
 ];
+
+const IRON_MAN: HeroData = { id: 9, name: "Iron Man", emoji: "🦾", isCorrect: true, failMessage: "" };
+
+const ALL_HEROES = [...WRONG_HEROES, IRON_MAN];
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 interface Props {
   onSolved: () => void;
@@ -36,21 +48,115 @@ interface Props {
 }
 
 export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Props) {
-  const [opened, setOpened] = useState<Set<number>>(new Set(alreadySolved ? HEROES.map(h => h.id) : []));
+  // Each grid slot has a heroId assigned. We shuffle which hero is behind which slot.
+  // Opened slots are locked. Unopened slots get reshuffled periodically.
+  // Iron Man is always placed in an unopened slot, ensuring he's the last one found.
+
+  const [openedSlots, setOpenedSlots] = useState<Set<number>>(new Set(alreadySolved ? [0,1,2,3,4,5,6,7,8] : []));
   const [foundIronMan, setFoundIronMan] = useState(alreadySolved);
-  const [showSnapText, setShowSnapText] = useState(false);
+  
+  // slotAssignment[slotIndex] = heroData
+  const [slotAssignment, setSlotAssignment] = useState<HeroData[]>(() => {
+    if (alreadySolved) return shuffleArray(ALL_HEROES);
+    return shuffleArray(ALL_HEROES);
+  });
 
-  const handleOpen = (hero: HeroData) => {
-    if (opened.has(hero.id) || foundIronMan) return;
-    setOpened((prev) => new Set(prev).add(hero.id));
+  // Track which heroes have been revealed (by hero id)
+  const [revealedHeroes, setRevealedHeroes] = useState<Map<number, HeroData>>(new Map());
+  
+  const shuffleUnopenedSlots = useCallback(() => {
+    setSlotAssignment(prev => {
+      const newAssignment = [...prev];
+      // Collect unopened slot indices
+      const unopenedIndices: number[] = [];
+      for (let i = 0; i < 9; i++) {
+        if (!openedSlots.has(i)) {
+          unopenedIndices.push(i);
+        }
+      }
+      if (unopenedIndices.length <= 1) return prev;
+      
+      // Collect heroes in unopened slots and shuffle them
+      const unopenedHeroes = unopenedIndices.map(i => newAssignment[i]);
+      const shuffled = shuffleArray(unopenedHeroes);
+      
+      // Reassign
+      unopenedIndices.forEach((slotIdx, i) => {
+        newAssignment[slotIdx] = shuffled[i];
+      });
+      
+      return newAssignment;
+    });
+  }, [openedSlots]);
 
-    if (hero.isCorrect) {
+  // Periodic shuffle of unopened cards
+  useEffect(() => {
+    if (foundIronMan || alreadySolved) return;
+    const interval = setInterval(() => {
+      shuffleUnopenedSlots();
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [shuffleUnopenedSlots, foundIronMan, alreadySolved]);
+
+  const handleOpen = (slotIndex: number) => {
+    if (openedSlots.has(slotIndex) || foundIronMan) return;
+    
+    const hero = slotAssignment[slotIndex];
+    
+    // Count how many slots are currently unopened (including this one)
+    const unopenedCount = 9 - openedSlots.size;
+    
+    if (unopenedCount <= 1) {
+      // This is the last card — force Iron Man
+      const newOpened = new Set(openedSlots);
+      newOpened.add(slotIndex);
+      setOpenedSlots(newOpened);
+      
+      // Override this slot with Iron Man
+      setSlotAssignment(prev => {
+        const copy = [...prev];
+        copy[slotIndex] = IRON_MAN;
+        return copy;
+      });
+      
       setFoundIronMan(true);
-      setTimeout(() => {
-        onSolved();
-      }, 2000);
+      setTimeout(() => onSolved(), 2000);
+      return;
     }
+    
+    // If they randomly clicked on Iron Man but it's not the last card, swap him elsewhere
+    let actualHero = hero;
+    if (hero.isCorrect && unopenedCount > 1) {
+      // Find another wrong hero to show instead, and move Iron Man to a different unopened slot
+      setSlotAssignment(prev => {
+        const copy = [...prev];
+        // Find an unopened slot that isn't this one and has a wrong hero
+        const otherUnopened = Array.from({ length: 9 }, (_, i) => i)
+          .filter(i => i !== slotIndex && !openedSlots.has(i) && !copy[i].isCorrect);
+        
+        if (otherUnopened.length > 0) {
+          const swapIdx = otherUnopened[Math.floor(Math.random() * otherUnopened.length)];
+          // Swap Iron Man with the wrong hero
+          [copy[slotIndex], copy[swapIdx]] = [copy[swapIdx], copy[slotIndex]];
+          actualHero = copy[slotIndex];
+        }
+        return copy;
+      });
+      // We need to use the swapped hero - get a wrong hero that hasn't been revealed
+      const revealedIds = new Set(revealedHeroes.keys());
+      const availableWrong = WRONG_HEROES.filter(h => !revealedIds.has(h.id));
+      if (availableWrong.length > 0) {
+        actualHero = availableWrong[Math.floor(Math.random() * availableWrong.length)];
+      }
+    }
+    
+    const newOpened = new Set(openedSlots);
+    newOpened.add(slotIndex);
+    setOpenedSlots(newOpened);
+    setRevealedHeroes(prev => new Map(prev).set(actualHero.id, actualHero));
   };
+
+  const totalOpened = openedSlots.size;
 
   return (
     <motion.div
@@ -88,7 +194,7 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
           Find the Future Where We Win
         </h1>
         <p className="text-muted-foreground font-body text-sm sm:text-base">
-          Explore the timelines until you find the hero who saves the universe.
+          The timelines are shifting… find the one hero who saves the universe.
         </p>
       </motion.div>
 
@@ -99,25 +205,31 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
           className="font-body font-bold text-lg"
           style={{ color: "hsl(var(--marvel-gold))", textShadow: "0 0 10px hsl(var(--marvel-gold) / 0.5)" }}
         >
-          {opened.size} / 9
+          {totalOpened} / 9
         </span>
       </div>
 
       {/* Portal Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5 mb-8">
-        {HEROES.map((hero, i) => (
-          <MarvelPortalCard
-            key={hero.id}
-            hero={hero}
-            isOpened={opened.has(hero.id)}
-            isCorrect={hero.isCorrect}
-            foundIronMan={foundIronMan}
-            index={i}
-            onOpen={() => handleOpen(hero)}
-          />
-        ))}
-      </div>
-
+      <LayoutGroup>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5 mb-8">
+          {slotAssignment.map((hero, slotIndex) => (
+            <motion.div
+              key={slotIndex}
+              layout
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            >
+              <MarvelPortalCard
+                hero={hero}
+                isOpened={openedSlots.has(slotIndex)}
+                isCorrect={hero.isCorrect}
+                foundIronMan={foundIronMan}
+                index={slotIndex}
+                onOpen={() => handleOpen(slotIndex)}
+              />
+            </motion.div>
+          ))}
+        </div>
+      </LayoutGroup>
     </motion.div>
   );
 }
