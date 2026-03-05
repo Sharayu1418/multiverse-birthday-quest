@@ -46,17 +46,31 @@ export default function MarvelIntro({ onStart }: Props) {
       )}
 
       {/* Fullscreen video */}
-      <div className="fixed inset-0 z-0">
+      <motion.div
+        className="fixed inset-0 z-0"
+        animate={{ opacity: showButton ? 0.3 : 1 }}
+        transition={{ duration: 1.5 }}
+      >
         <iframe
           className="w-full h-full"
-          src="https://streamable.com/e/6ft5jh?autoplay=1&muted=0"
+          src="https://streamable.com/e/6ft5jh?autoplay=1&muted=0&loop=0"
           title="Marvel Intro"
           frameBorder="0"
           allow="autoplay; encrypted-media; fullscreen"
           allowFullScreen
           style={{ position: "absolute", inset: 0, border: "none" }}
         />
-      </div>
+      </motion.div>
+
+      {/* Dark overlay when button appears */}
+      {showButton && (
+        <motion.div
+          className="fixed inset-0 z-10 bg-black/60"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
+        />
+      )}
 
       {/* Reveal the Path button */}
       <AnimatePresence>
