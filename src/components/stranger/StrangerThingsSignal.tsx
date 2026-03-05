@@ -72,27 +72,26 @@ export default function StrangerThingsSignal() {
     return () => clearTimeout(t);
   }, [phase]);
 
-  // Phase 2: Video with flashing numbers
+  // Phase 2: Video with only a few teaser flashes
   useEffect(() => {
     if (phase !== "video") return;
 
-    const interval = VIDEO_DURATION / FLASH_SEQUENCE.length;
+    const teaser = FLASH_SEQUENCE.slice(0, TEASER_COUNT);
+    const interval = VIDEO_DURATION / teaser.length;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    FLASH_SEQUENCE.forEach((num, i) => {
-      // Show number
+    teaser.forEach((num, i) => {
       timers.push(setTimeout(() => {
         setCurrentFlash(num);
-        setRevealedNumbers(prev => [...prev, num]);
       }, i * interval));
-      // Hide number
       timers.push(setTimeout(() => {
         setCurrentFlash(null);
       }, i * interval + FLASH_DURATION));
     });
 
-    // Transition to decode phase
+    // Transition to decode phase — reveal all numbers at once there
     timers.push(setTimeout(() => {
+      setRevealedNumbers([...FLASH_SEQUENCE]);
       setPhase("decode");
     }, VIDEO_DURATION + 500));
 
