@@ -21,8 +21,8 @@ export default function IronManVideoReveal({ onContinue }: Props) {
     if (phase !== "video") return;
     // Show skip option after 10s for replays
     const skipTimer = setTimeout(() => setCanSkip(true), 10000);
-    // Auto-show button after full video duration (~2:50)
-    const t = setTimeout(() => setPhase("button"), 170000);
+    // Auto-show button after video duration (1:13) + 1s buffer
+    const t = setTimeout(() => setPhase("button"), 74000);
     return () => { clearTimeout(t); clearTimeout(skipTimer); };
   }, [phase]);
 
@@ -61,13 +61,13 @@ export default function IronManVideoReveal({ onContinue }: Props) {
           >
             <iframe
               ref={iframeRef}
-              className="w-full h-full"
-              src="https://streamable.com/e/bs97oa?autoplay=1"
+              className="w-full h-full transition-opacity duration-1000"
+              src="https://streamable.com/e/bs97oa?autoplay=1&loop=0"
               title="Marvel Video"
               frameBorder="0"
               allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen
-              style={{ position: "absolute", inset: 0 }}
+              style={{ position: "absolute", inset: 0, opacity: phase === "button" ? 0.3 : 1 }}
             />
 
             {phase === "button" && (
