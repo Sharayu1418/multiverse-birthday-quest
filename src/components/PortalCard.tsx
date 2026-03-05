@@ -34,7 +34,10 @@ export default function PortalCard({ world, solved, index }: PortalCardProps) {
 
   return (
     <motion.button
-      onClick={() => navigate(`/world/${world.id}`)}
+      onClick={() => {
+        const route = world.id === "stranger" ? "/world/stranger-signal" : `/world/${world.id}`;
+        navigate(route);
+      }}
       className="group relative flex flex-col items-center gap-3 p-6 rounded-2xl
         border border-border/50 bg-card/50 backdrop-blur-sm cursor-pointer
         transition-colors duration-300 w-full"
