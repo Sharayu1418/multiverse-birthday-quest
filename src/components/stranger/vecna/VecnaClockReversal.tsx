@@ -7,6 +7,7 @@ import PortalRift from "./PortalRift";
 import ColorSequenceDisplay, { type ToneColor, COLOR_MAP } from "./ColorSequenceDisplay";
 import SequenceInputButtons from "./SequenceInputButtons";
 import { playSuccessAudio } from "./successAudio";
+import vecnaClockImg from "@/assets/vecna_clock.jpg";
 
 type Phase = "entry" | "playing" | "input" | "success";
 
@@ -319,40 +320,29 @@ export default function VecnaClockReversal() {
         {/* ── ENTRY ── */}
         {phase === "entry" && (
           <motion.div key="entry" className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            {/* Grandfather clock body */}
+            {/* Vecna Clock Image */}
             <motion.div
               className="relative"
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.4, duration: 1.4, ease: "easeOut" }}
             >
-              <div
-                className="relative w-36 h-52 sm:w-44 sm:h-64 flex flex-col items-center"
+              <div className="relative w-48 h-64 sm:w-64 sm:h-80 rounded-lg overflow-hidden"
                 style={{
-                  background: "linear-gradient(180deg, hsl(30 30% 15%), hsl(20 25% 10%))",
-                  borderRadius: "10px 10px 4px 4px",
-                  border: "2px solid hsl(30 20% 20%)",
-                  boxShadow: "0 0 45px hsl(0 50% 15% / 0.5), inset 0 0 20px hsl(0 20% 5% / 0.5)",
-                }}
-              >
-                <div className="mt-3">
-                  <ClockFace size="large" />
-                </div>
-                {/* Pendulum */}
-                <motion.div
-                  className="mt-2 w-0.5 h-16 sm:h-20 origin-top"
-                  style={{ background: "hsl(30 20% 25%)" }}
-                  animate={{ rotate: [-15, 15, -15] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <div
-                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full"
-                    style={{
-                      background: "radial-gradient(circle, hsl(40 40% 50%), hsl(30 30% 30%))",
-                      border: "1px solid hsl(30 20% 25%)",
-                    }}
-                  />
-                </motion.div>
+                  boxShadow: "0 0 60px hsl(220 70% 30% / 0.5), 0 0 120px hsl(0 70% 25% / 0.3)",
+                  border: "2px solid hsl(220 40% 25% / 0.5)",
+                }}>
+                <img src={vecnaClockImg} alt="Vecna's Clock" className="w-full h-full object-cover" />
+                {/* Eerie overlay */}
+                <div className="absolute inset-0" style={{
+                  background: "radial-gradient(ellipse at center, transparent 30%, hsl(0 50% 10% / 0.4) 100%)",
+                }} />
+                {/* Pulsing glow */}
+                <motion.div className="absolute inset-0"
+                  style={{ background: "hsl(0 80% 30% / 0.1)" }}
+                  animate={{ opacity: [0, 0.15, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
               </div>
             </motion.div>
             {/* Warning text */}
@@ -382,8 +372,9 @@ export default function VecnaClockReversal() {
         {(phase === "playing" || phase === "input") && (
           <motion.div key="puzzle" className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 sm:gap-5 px-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {/* Mini clock top-right */}
-            <div className="absolute top-4 right-4">
-              <ClockFace size="small" />
+            <div className="absolute top-4 right-4 w-14 h-14 rounded-md overflow-hidden"
+              style={{ boxShadow: "0 0 15px hsl(220 60% 25% / 0.4)", border: "1px solid hsl(220 30% 25% / 0.5)" }}>
+              <img src={vecnaClockImg} alt="Clock" className="w-full h-full object-cover" style={{ filter: "brightness(0.7)" }} />
             </div>
 
             {/* Clue */}
@@ -439,31 +430,47 @@ export default function VecnaClockReversal() {
         {phase === "success" && (
           <motion.div key="success" className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
             {/* Cracking clock */}
-            <motion.div className="relative">
-              <div
-                className="relative w-36 h-52 sm:w-44 sm:h-64 flex flex-col items-center"
+            <motion.div className="relative"
+              animate={clockCracked ? { scale: [1, 1.08, 0.94, 1], rotate: [0, -3, 3, 0] } : {}}
+              transition={{ duration: 0.5 }}>
+              <div className="relative w-48 h-64 sm:w-64 sm:h-80 rounded-lg overflow-hidden"
                 style={{
-                  background: "linear-gradient(180deg, hsl(30 30% 15%), hsl(20 25% 10%))",
-                  borderRadius: "10px 10px 4px 4px",
-                  border: "2px solid hsl(30 20% 20%)",
                   boxShadow: clockCracked
-                    ? "0 0 50px hsl(0 70% 30% / 0.7), 0 0 100px hsl(0 60% 20% / 0.3)"
-                    : "0 0 25px hsl(0 40% 15% / 0.5)",
-                }}
-              >
-                <div className="mt-3">
-                  <ClockFace size="large" cracked={clockCracked} spinning={clockSpinning} stoppedAt1111={clockStopped} />
-                </div>
-                {/* Stopped pendulum */}
-                <div className="mt-2 w-0.5 h-16 sm:h-20" style={{ background: "hsl(30 20% 25%)" }}>
-                  <div
-                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full"
-                    style={{
-                      background: "radial-gradient(circle, hsl(40 40% 50%), hsl(30 30% 30%))",
-                      border: "1px solid hsl(30 20% 25%)",
-                    }}
+                    ? "0 0 80px hsl(0 80% 30% / 0.7), 0 0 150px hsl(0 70% 20% / 0.4)"
+                    : "0 0 40px hsl(220 70% 30% / 0.5)",
+                  border: "2px solid hsl(220 40% 25% / 0.5)",
+                }}>
+                <img src={vecnaClockImg} alt="Vecna's Clock" className="w-full h-full object-cover"
+                  style={{ filter: clockCracked ? "brightness(0.5) saturate(0.4)" : undefined }} />
+                {/* Crack overlay */}
+                {clockCracked && (
+                  <motion.div className="absolute inset-0"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}>
+                    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      {[
+                        "M50,0 L48,20 L53,35 L47,50 L52,65 L49,80 L50,100",
+                        "M50,50 L30,45 L15,48",
+                        "M50,50 L70,42 L85,46",
+                        "M48,35 L35,25 L20,28",
+                        "M52,65 L65,72 L80,68",
+                      ].map((d, i) => (
+                        <motion.path key={i} d={d} stroke="hsl(0 60% 30%)" strokeWidth="0.8" fill="none"
+                          initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                          transition={{ delay: i * 0.08, duration: 0.3 }} />
+                      ))}
+                    </svg>
+                  </motion.div>
+                )}
+                {/* Red pulse on crack */}
+                {clockCracked && (
+                  <motion.div className="absolute inset-0"
+                    style={{ background: "hsl(0 80% 25% / 0.25)" }}
+                    animate={{ opacity: [0.3, 0, 0.2, 0] }}
+                    transition={{ duration: 1.5 }}
                   />
-                </div>
+                )}
               </div>
             </motion.div>
 
