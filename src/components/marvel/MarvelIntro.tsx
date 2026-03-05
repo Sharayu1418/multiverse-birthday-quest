@@ -11,7 +11,7 @@ export default function MarvelIntro({ onStart }: Props) {
 
   useEffect(() => {
     // Show button after video plays (~15s for this clip, adjust as needed)
-    const t = setTimeout(() => setShowButton(true), 12000);
+    const t = setTimeout(() => setShowButton(true), 32000);
     return () => clearTimeout(t);
   }, []);
 
@@ -49,7 +49,7 @@ export default function MarvelIntro({ onStart }: Props) {
       <div className="fixed inset-0 z-0">
         <iframe
           className="w-full h-full"
-          src="https://streamable.com/e/6ft5jh?autoplay=1&muted=1"
+          src="https://streamable.com/e/6ft5jh?autoplay=1&muted=0"
           title="Marvel Intro"
           frameBorder="0"
           allow="autoplay; encrypted-media; fullscreen"
