@@ -138,11 +138,13 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
 
     if (unopenedCount <= 1) {
       setFoundIronMan(true);
-      setTimeout(() => onSolved(), 2000);
+      // Delay to let the reveal play, then trigger onSolved
+      setTimeout(() => onSolved(), 4000);
     }
   };
 
   const totalOpened = cards.filter(c => c.isOpened).length;
+  const ironManIndex = foundIronMan ? cards.findIndex(c => c.hero.isCorrect) : -1;
 
   return (
     <motion.div
@@ -157,7 +159,8 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
         onClick={onBack}
         className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6 font-body cursor-pointer"
         initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
+        animate={{ opacity: foundIronMan ? 0 : 1, x: 0 }}
+        transition={{ duration: 0.5 }}
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Multiverse
@@ -167,7 +170,7 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
       <motion.div
         className="text-center mb-8"
         initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+        animate={{ opacity: foundIronMan ? 0 : 1, y: foundIronMan ? -30 : 0 }}
         transition={{ duration: 0.6 }}
       >
         <h1
@@ -185,7 +188,11 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
       </motion.div>
 
       {/* Progress */}
-      <div className="flex items-center justify-center gap-2 mb-6">
+      <motion.div
+        className="flex items-center justify-center gap-2 mb-6"
+        animate={{ opacity: foundIronMan ? 0 : 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <span className="text-muted-foreground font-body text-sm">Futures Explored:</span>
         <span
           className="font-body font-bold text-lg"
@@ -193,30 +200,121 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
         >
           {totalOpened} / 9
         </span>
-      </div>
+      </motion.div>
 
-      {/* Portal Grid — layoutId drives visible shuffle animation */}
+      {/* Portal Grid */}
       <LayoutGroup>
-        <div className="grid grid-cols-3 gap-3 sm:gap-5 mb-8">
-          {cards.map((card, index) => (
-            <motion.div
-              key={card.isOpened ? `opened-${index}` : `card-${card.cardId}`}
-              layoutId={card.isOpened ? undefined : `portal-${card.cardId}`}
-              layout
-              transition={{ type: "spring", stiffness: 200, damping: 22, mass: 0.8 }}
-            >
-              <MarvelPortalCard
-                hero={card.hero}
-                isOpened={card.isOpened}
-                isCorrect={card.hero.isCorrect}
-                foundIronMan={foundIronMan}
-                index={index}
-                onOpen={() => handleOpen(index)}
-              />
-            </motion.div>
-          ))}
+        <div className={`grid grid-cols-3 gap-3 sm:gap-5 mb-8 ${foundIronMan ? "relative" : ""}`}>
+          {cards.map((card, index) => {
+            const isTheIronMan = index === ironManIndex;
+
+            if (foundIronMan && !isTheIronMan) {
+              return (
+                <motion.div
+                  key={`fading-${index}`}
+                  animate={{ opacity: 0, scale: 0.3 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="pointer-events-none"
+                >
+                  <MarvelPortalCard
+                    hero={card.hero}
+                    isOpened={card.isOpened}
+                    isCorrect={card.hero.isCorrect}
+                    foundIronMan={foundIronMan}
+                    index={index}
+                    onOpen={() => {}}
+                  />
+                </motion.div>
+              );
+            }
+
+            return (
+              <motion.div
+                key={card.isOpened ? `opened-${index}` : `card-${card.cardId}`}
+                layoutId={card.isOpened ? undefined : `portal-${card.cardId}`}
+                layout
+                transition={{ type: "spring", stiffness: 200, damping: 22, mass: 0.8 }}
+              >
+                <MarvelPortalCard
+                  hero={card.hero}
+                  isOpened={card.isOpened}
+                  isCorrect={card.hero.isCorrect}
+                  foundIronMan={foundIronMan}
+                  index={index}
+                  onOpen={() => handleOpen(index)}
+                />
+              </motion.div>
+            );
+          })}
         </div>
       </LayoutGroup>
+
+      {/* Iron Man center reveal overlay */}
+      {foundIronMan && (
+        <motion.div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+        >
+          {/* Glow backdrop */}
+          <motion.div
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 1 }}
+            style={{
+              background: "radial-gradient(circle, hsl(var(--marvel-gold) / 0.15) 0%, transparent 70%)",
+            }}
+          />
+
+          {/* Iron Man card */}
+          <motion.div
+            className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full flex flex-col items-center justify-center overflow-hidden"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1.2, duration: 0.8, type: "spring", stiffness: 150, damping: 15 }}
+            style={{
+              background: "radial-gradient(circle, hsl(40 90% 55% / 0.3), hsl(0 80% 50% / 0.15), hsl(var(--card) / 0.9))",
+              border: "3px solid hsl(var(--marvel-gold) / 0.8)",
+              boxShadow: "0 0 60px hsl(var(--marvel-gold) / 0.5), 0 0 120px hsl(var(--marvel-gold) / 0.3)",
+            }}
+          >
+            <motion.div
+              className="absolute -inset-2 rounded-full"
+              animate={{
+                boxShadow: [
+                  "0 0 30px hsl(var(--marvel-gold) / 0.4)",
+                  "0 0 80px hsl(var(--marvel-gold) / 0.7)",
+                  "0 0 30px hsl(var(--marvel-gold) / 0.4)",
+                ],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+              style={{ border: "2px solid hsl(var(--marvel-gold) / 0.5)" }}
+            />
+            {IRON_MAN.image && (
+              <img src={IRON_MAN.image} alt="Iron Man" className="w-24 h-24 sm:w-32 sm:h-32 object-contain" />
+            )}
+            <span
+              className="font-body text-sm sm:text-base font-bold mt-1"
+              style={{ color: "hsl(var(--marvel-gold))", textShadow: "0 0 15px hsl(var(--marvel-gold) / 0.6)" }}
+            >
+              Iron Man
+            </span>
+          </motion.div>
+
+          {/* Victory text */}
+          <motion.p
+            className="font-display text-lg sm:text-2xl font-bold mt-6 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2, duration: 0.6 }}
+            style={{ color: "hsl(var(--marvel-gold))", textShadow: "0 0 20px hsl(var(--marvel-gold) / 0.5)" }}
+          >
+            This is the one future where we win.
+          </motion.p>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
