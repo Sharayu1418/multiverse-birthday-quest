@@ -62,7 +62,7 @@ export default function IronManVideoReveal({ onContinue }: Props) {
             <iframe
               ref={iframeRef}
               className="w-full h-full"
-              src="https://streamable.com/e/c19pp1?autoplay=1"
+              src="https://streamable.com/e/bs97oa?autoplay=1"
               title="Marvel Video"
               frameBorder="0"
               allow="autoplay; encrypted-media; fullscreen"
