@@ -293,13 +293,18 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
               style={{ border: "2px solid hsl(var(--marvel-gold) / 0.5)" }}
             />
             {IRON_MAN.image && (
-              <img src={IRON_MAN.image} alt="Iron Man" className="w-24 h-24 sm:w-32 sm:h-32 object-contain" />
+              <img src={IRON_MAN.image} alt="Iron Man" className="w-20 h-20 sm:w-28 sm:h-28 object-contain" />
             )}
             <span
               className="font-body text-sm sm:text-base font-bold mt-1"
               style={{ color: "hsl(var(--marvel-gold))", textShadow: "0 0 15px hsl(var(--marvel-gold) / 0.6)" }}
             >
               Iron Man
+            </span>
+            <span
+              className="font-body text-[9px] sm:text-xs italic px-3 text-center leading-tight text-muted-foreground"
+            >
+              "Sometimes you gotta run before you can walk."
             </span>
           </motion.div>
 
