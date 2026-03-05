@@ -304,7 +304,7 @@ export default function CinematicSuccessScene() {
         transition={{ delay: 7, duration: 2 }}
       >
         <motion.button
-          onClick={() => navigate("/hub")}
+          onClick={() => navigate("/world/stranger-vecna")}
           className="font-mono text-xs sm:text-sm uppercase tracking-[0.3em] px-8 py-3 rounded-sm cursor-pointer border"
           style={{
             color: "hsl(0 60% 55%)",
@@ -317,7 +317,7 @@ export default function CinematicSuccessScene() {
           animate={{ opacity: [0.6, 1, 0.6] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          Return to Hub
+          Save NYC, only YOU can
         </motion.button>
       </motion.div>
     </motion.div>
