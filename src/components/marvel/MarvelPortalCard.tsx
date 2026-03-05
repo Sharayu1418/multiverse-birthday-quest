@@ -9,6 +9,18 @@ interface HeroData {
   failMessage: string;
 }
 
+const heroColors: Record<string, string> = {
+  "Thor": "#5B9BD5",
+  "Captain America": "#3B82F6",
+  "Hulk": "#22C55E",
+  "Spider-Man": "#EF4444",
+  "Black Widow": "#A78BFA",
+  "Doctor Strange": "#F59E0B",
+  "Ant-Man": "#F97316",
+  "Scarlet Witch": "#EC4899",
+  "Iron Man": "hsl(var(--marvel-gold))",
+};
+
 interface Props {
   hero: HeroData;
   isOpened: boolean;
@@ -67,26 +79,29 @@ export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronM
       {/* Content */}
       {isOpened ? (
         <motion.div
-          className="flex flex-col items-center gap-1"
+          className="flex flex-col items-center gap-0.5 px-3 overflow-hidden w-full"
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, type: "spring" }}
         >
           {hero.image ? (
-            <img src={hero.image} alt={hero.name} className="w-16 h-16 sm:w-20 sm:h-20 object-contain" />
+            <img src={hero.image} alt={hero.name} className="w-10 h-10 sm:w-14 sm:h-14 object-contain" />
           ) : (
-            <span className="text-3xl sm:text-4xl">{hero.emoji}</span>
+            <span className="text-2xl sm:text-3xl">{hero.emoji}</span>
           )}
           <span
-            className="font-body text-xs sm:text-sm font-medium px-2 text-center"
+            className="font-body text-[11px] sm:text-xs font-bold px-1 text-center leading-tight"
             style={{
-              color: isCorrect ? "hsl(var(--marvel-gold))" : "hsl(var(--muted-foreground))",
+              color: heroColors[hero.name] || "hsl(var(--foreground))",
             }}
           >
             {hero.name}
           </span>
           {!isCorrect && (
-            <span className="font-body text-[10px] sm:text-xs italic text-marvel-red/80 px-2 text-center">
+            <span
+              className="font-body text-[8px] sm:text-[10px] font-semibold italic px-1 text-center leading-tight"
+              style={{ color: heroColors[hero.name] || "hsl(var(--marvel-red))" }}
+            >
               {hero.failMessage}
             </span>
           )}
