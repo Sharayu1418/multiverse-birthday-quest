@@ -7,7 +7,7 @@ import ChristmasLightAlphabet from "./ChristmasLightAlphabet";
 import CinematicSuccessScene from "./CinematicSuccessScene";
 import { ArrowLeft } from "lucide-react";
 
-type Phase = "glitch" | "video" | "decode" | "solved" | "portal";
+type Phase = "intro" | "glitch" | "video" | "decode" | "solved" | "portal";
 
 const FLASH_SEQUENCE = [20, 8, 5, 7, 1, 20, 5, 9, 19, 15, 16, 5, 14, 14, 5, 23, 25, 15, 18, 11, 9, 19, 14, 5, 24, 20];
 const CORRECT_ANSWER = "THE GATE IS OPEN NEW YORK IS NEXT";
@@ -36,7 +36,8 @@ export default function StrangerThingsSignal() {
   const { markSolved } = useGameProgress();
   const isMobile = useIsMobile();
 
-  const [phase, setPhase] = useState<Phase>("glitch");
+  const [phase, setPhase] = useState<Phase>("intro");
+  const introVideoRef = useRef<HTMLVideoElement | null>(null);
   const [currentFlash, setCurrentFlash] = useState<number | null>(null);
   const [revealedNumbers, setRevealedNumbers] = useState<number[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -46,6 +47,23 @@ export default function StrangerThingsSignal() {
   const [vineProgress, setVineProgress] = useState(0);
   const audioRef = useRef<AudioContext | null>(null);
   const monsterIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Phase 0: Intro video → Glitch
+  useEffect(() => {
+    if (phase !== "intro") return;
+    const vid = introVideoRef.current;
+    if (!vid) return;
+    const handleEnded = () => {
+      setPhase("glitch");
+    };
+    vid.addEventListener("ended", handleEnded);
+    vid.play().catch(() => {
+      // Autoplay blocked — skip after timeout
+      const t = setTimeout(() => setPhase("glitch"), 2000);
+      return () => clearTimeout(t);
+    });
+    return () => vid.removeEventListener("ended", handleEnded);
+  }, [phase]);
 
   // Phase 1: Glitch → Video
   useEffect(() => {
