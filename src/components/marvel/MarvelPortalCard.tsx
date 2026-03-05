@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface HeroData {
@@ -32,6 +33,14 @@ interface Props {
 
 export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronMan, index, onOpen }: Props) {
   const isIronManRevealed = isOpened && isCorrect;
+  const [revealed, setRevealed] = useState(isOpened);
+
+  useEffect(() => {
+    if (isOpened && !revealed) {
+      const timer = setTimeout(() => setRevealed(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpened, revealed]);
 
   return (
     <motion.button
@@ -51,15 +60,29 @@ export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronM
         boxShadow: isIronManRevealed
           ? "0 0 40px hsl(var(--marvel-gold) / 0.6), 0 0 80px hsl(var(--marvel-gold) / 0.3)"
           : isOpened
-          ? "none"
+          ? "0 0 15px hsl(var(--marvel-gold) / 0.25)"
           : "0 0 20px hsl(var(--marvel-gold) / 0.15)",
         border: isIronManRevealed
           ? "2px solid hsl(var(--marvel-gold) / 0.8)"
           : isOpened
-          ? "1px solid hsl(var(--border) / 0.3)"
+          ? "2px solid hsl(var(--marvel-gold) / 0.5)"
           : "2px solid hsl(var(--marvel-gold) / 0.3)",
       }}
     >
+      {/* Golden ring for explored futures */}
+      {isOpened && !isIronManRevealed && (
+        <motion.div
+          className="absolute -inset-1 rounded-full"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          style={{
+            border: "2px solid hsl(var(--marvel-gold) / 0.4)",
+            boxShadow: "0 0 12px hsl(var(--marvel-gold) / 0.2), inset 0 0 12px hsl(var(--marvel-gold) / 0.1)",
+          }}
+        />
+      )}
+
       {/* Spinning ring for unopened */}
       {!isOpened && (
         <>
@@ -77,7 +100,7 @@ export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronM
       )}
 
       {/* Content */}
-      {isOpened ? (
+      {revealed ? (
         <motion.div
           className="flex flex-col items-center gap-0.5 px-3 overflow-hidden w-full"
           initial={{ opacity: 0, scale: 0.5 }}
@@ -102,6 +125,21 @@ export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronM
               {hero.failMessage}
             </span>
           )}
+        </motion.div>
+      ) : isOpened ? (
+        /* Loading state during 1s delay */
+        <motion.div
+          className="flex flex-col items-center gap-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <motion.div
+            className="w-6 h-6 rounded-full border-2 border-t-transparent"
+            style={{ borderColor: "hsl(var(--marvel-gold) / 0.5)", borderTopColor: "transparent" }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+          />
+          <span className="font-body text-[10px] text-marvel-gold/60">Exploring…</span>
         </motion.div>
       ) : (
         <motion.div
