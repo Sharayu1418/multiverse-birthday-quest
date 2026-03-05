@@ -12,9 +12,9 @@ interface HeroData {
 }
 
 const HEROES: HeroData[] = [
-  { id: 1, name: "Thor", emoji: "⚡", isCorrect: false, failMessage: "That future fails." },
-  { id: 2, name: "Captain America", emoji: "🛡️", isCorrect: false, failMessage: "Not this one." },
-  { id: 3, name: "Hulk", emoji: "💚", isCorrect: false, failMessage: "We lose in this timeline." },
+  { id: 1, name: "Thor", emoji: "⚡", isCorrect: false, failMessage: "Even the thunder cannot save this future." },
+  { id: 2, name: "Captain America", emoji: "🛡️", isCorrect: false, failMessage: "We gave it everything… but this isn't the one." },
+  { id: 3, name: "Hulk", emoji: "💚", isCorrect: false, failMessage: "Hulk tried. Hulk still lose." },
   { id: 4, name: "Spider-Man", emoji: "🕷️", isCorrect: false, failMessage: "That future fails." },
   { id: 5, name: "Black Widow", emoji: "🖤", isCorrect: false, failMessage: "Not this one." },
   { id: 6, name: "Doctor Strange", emoji: "🔮", isCorrect: false, failMessage: "We lose in this timeline." },
