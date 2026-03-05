@@ -8,8 +8,6 @@ import ColorSequenceDisplay, { type ToneColor, COLOR_MAP } from "./ColorSequence
 import SequenceInputButtons from "./SequenceInputButtons";
 import { playSuccessAudio } from "./successAudio";
 import vecnaClockImg from "@/assets/vecna_clock.jpg";
-import SequenceInputButtons from "./SequenceInputButtons";
-import { playSuccessAudio } from "./successAudio";
 
 type Phase = "entry" | "playing" | "input" | "success";
 
