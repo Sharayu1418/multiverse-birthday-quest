@@ -90,10 +90,7 @@ export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronM
             <span className="text-2xl sm:text-3xl">{hero.emoji}</span>
           )}
           <span
-            className="font-body text-[11px] sm:text-xs font-bold px-1 text-center leading-tight"
-            style={{
-              color: heroColors[hero.name] || "hsl(var(--foreground))",
-            }}
+            className="font-body text-[11px] sm:text-xs font-bold px-1 text-center leading-tight text-foreground"
           >
             {hero.name}
           </span>
