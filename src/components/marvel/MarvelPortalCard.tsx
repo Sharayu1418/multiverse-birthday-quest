@@ -46,8 +46,8 @@ export default function MarvelPortalCard({ hero, isOpened, isCorrect, foundIronM
     <motion.button
       onClick={onOpen}
       disabled={isOpened || foundIronMan}
-      className="relative aspect-square rounded-full flex flex-col items-center justify-center cursor-pointer
-        disabled:cursor-default transition-all duration-300 group"
+      className="relative w-full aspect-square rounded-full flex flex-col items-center justify-center cursor-pointer
+        disabled:cursor-default transition-all duration-300 group overflow-hidden"
       initial={{ opacity: 1, scale: 1 }}
       whileHover={!isOpened && !foundIronMan ? { scale: 1.08 } : {}}
       whileTap={!isOpened && !foundIronMan ? { scale: 0.95 } : {}}
