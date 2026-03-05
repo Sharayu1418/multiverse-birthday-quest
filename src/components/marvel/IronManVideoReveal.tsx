@@ -15,11 +15,15 @@ export default function IronManVideoReveal({ onContinue }: Props) {
     return () => clearTimeout(t);
   }, []);
 
+  const [canSkip, setCanSkip] = useState(false);
+
   useEffect(() => {
     if (phase !== "video") return;
-    // Streamable video is ~2:30. Show button after 155s
-    const t = setTimeout(() => setPhase("button"), 10000);
-    return () => clearTimeout(t);
+    // Show skip option after 10s for replays
+    const skipTimer = setTimeout(() => setCanSkip(true), 10000);
+    // Auto-show button after full video duration (~2:50)
+    const t = setTimeout(() => setPhase("button"), 170000);
+    return () => { clearTimeout(t); clearTimeout(skipTimer); };
   }, [phase]);
 
   return (
@@ -82,6 +86,19 @@ export default function IronManVideoReveal({ onContinue }: Props) {
                 }}
               >
                 Restore the Multiverse
+              </motion.button>
+            )}
+
+            {phase === "video" && canSkip && (
+              <motion.button
+                onClick={() => setPhase("button")}
+                className="absolute bottom-6 z-10 font-body text-sm cursor-pointer hover:opacity-100 transition-opacity"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.5 }}
+                whileHover={{ opacity: 1 }}
+                style={{ color: "hsl(var(--marvel-gold))" }}
+              >
+                Skip to end →
               </motion.button>
             )}
           </motion.div>

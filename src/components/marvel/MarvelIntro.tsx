@@ -9,10 +9,14 @@ export default function MarvelIntro({ onStart }: Props) {
   const [showButton, setShowButton] = useState(false);
   const [portalActive, setPortalActive] = useState(false);
 
+  const [canSkip, setCanSkip] = useState(false);
+
   useEffect(() => {
-    // Show button after video plays (~15s for this clip, adjust as needed)
+    // Show skip option after 10s for replays
+    const skipTimer = setTimeout(() => setCanSkip(true), 10000);
+    // Show button after full video duration (~32s)
     const t = setTimeout(() => setShowButton(true), 32000);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); clearTimeout(skipTimer); };
   }, []);
 
   const handleClick = () => {
@@ -70,6 +74,20 @@ export default function MarvelIntro({ onStart }: Props) {
           animate={{ opacity: 1 }}
           transition={{ duration: 1.5 }}
         />
+      )}
+
+      {/* Skip button for replays */}
+      {!showButton && canSkip && (
+        <motion.button
+          onClick={() => setShowButton(true)}
+          className="fixed bottom-6 z-20 font-body text-sm cursor-pointer hover:opacity-100 transition-opacity"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          whileHover={{ opacity: 1 }}
+          style={{ color: "hsl(var(--marvel-gold))" }}
+        >
+          Skip to end →
+        </motion.button>
       )}
 
       {/* Reveal the Path button */}
