@@ -1,14 +1,20 @@
 import { motion, AnimatePresence } from "framer-motion";
 import orangeCouch from "@/assets/friends/orange_couch.png";
+import rossImg from "@/assets/friends/ross.png";
+import monicaImg from "@/assets/friends/monica.png";
+import chandlerImg from "@/assets/friends/chandler.png";
+import rachelImg from "@/assets/friends/rachel.png";
+import joeyImg from "@/assets/friends/joey.png";
+import phoebeImg from "@/assets/friends/phoebe.png";
 import type { FriendCharacter } from "./FriendsTriviaGame";
 
 const CHARACTER_POSITIONS: Record<FriendCharacter, { left: string; bottom: string }> = {
-  Ross:     { left: "5%",  bottom: "55%" },
-  Monica:   { left: "18%", bottom: "58%" },
-  Chandler: { left: "33%", bottom: "55%" },
-  Rachel:   { left: "50%", bottom: "58%" },
-  Joey:     { left: "65%", bottom: "55%" },
-  Phoebe:   { left: "80%", bottom: "58%" },
+  Ross:     { left: "2%",  bottom: "38%" },
+  Monica:   { left: "16%", bottom: "38%" },
+  Chandler: { left: "30%", bottom: "38%" },
+  Rachel:   { left: "48%", bottom: "38%" },
+  Joey:     { left: "64%", bottom: "38%" },
+  Phoebe:   { left: "78%", bottom: "38%" },
 };
 
 const CHARACTER_COLORS: Record<FriendCharacter, string> = {
@@ -20,13 +26,13 @@ const CHARACTER_COLORS: Record<FriendCharacter, string> = {
   Rachel: "340 60% 55%",
 };
 
-const CHARACTER_EMOJI: Record<FriendCharacter, string> = {
-  Ross: "🦕",
-  Joey: "🍕",
-  Phoebe: "🎸",
-  Monica: "👩‍🍳",
-  Chandler: "😏",
-  Rachel: "👗",
+const CHARACTER_IMAGES: Record<FriendCharacter, string> = {
+  Ross: rossImg,
+  Monica: monicaImg,
+  Chandler: chandlerImg,
+  Rachel: rachelImg,
+  Joey: joeyImg,
+  Phoebe: phoebeImg,
 };
 
 interface Props {
@@ -90,19 +96,22 @@ export default function CouchScene({ revealedCharacters, showReveal, latestChar 
                 </>
               )}
 
-              {/* Character circle */}
+              {/* Character image */}
               <motion.div
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-lg sm:text-xl"
+                className="w-14 h-20 sm:w-16 sm:h-24 rounded-lg overflow-hidden"
                 style={{
-                  background: `radial-gradient(circle, hsl(${color}), hsl(${color} / 0.6))`,
                   boxShadow: isLatest
                     ? `0 0 20px hsl(${color} / 0.6), 0 0 40px hsl(${color} / 0.3)`
                     : `0 0 10px hsl(${color} / 0.3)`,
                 }}
-                animate={isLatest ? { scale: [1, 1.3, 1] } : {}}
+                animate={isLatest ? { scale: [1, 1.15, 1] } : {}}
                 transition={{ duration: 0.5 }}
               >
-                {CHARACTER_EMOJI[char]}
+                <img
+                  src={CHARACTER_IMAGES[char]}
+                  alt={char}
+                  className="w-full h-full object-cover object-top"
+                />
               </motion.div>
               <span
                 className="text-[10px] sm:text-xs font-body font-medium mt-1"
