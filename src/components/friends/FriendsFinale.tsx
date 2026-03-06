@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import orangeCouch from "@/assets/friends/orange_couch.png";
 
-const ALL_CHARS = ["Ross", "Joey", "Phoebe", "Monica", "Chandler", "Rachel"];
+const ALL_CHARS = ["Ross", "Monica", "Chandler", "Rachel", "Joey", "Phoebe"];
 const EMOJIS: Record<string, string> = {
   Ross: "🦕", Joey: "🍕", Phoebe: "🎸", Monica: "👩‍🍳", Chandler: "😏", Rachel: "👗",
 };
@@ -109,18 +109,34 @@ export default function FriendsFinale({ onReturn }: Props) {
 
       {/* Quote */}
       {showText && (
-        <motion.h2
-          className="text-2xl sm:text-4xl font-display font-bold"
-          style={{
-            color: "hsl(var(--friends-orange))",
-            textShadow: "0 0 30px hsl(var(--friends-orange) / 0.5), 0 0 60px hsl(var(--friends-orange) / 0.2)",
-          }}
+        <motion.div
+          className="space-y-3"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1 }}
         >
-          "I'll be there for you."
-        </motion.h2>
+          <h2
+            className="text-xl sm:text-3xl font-display font-bold"
+            style={{
+              color: "hsl(var(--friends-orange))",
+              textShadow: "0 0 30px hsl(var(--friends-orange) / 0.5), 0 0 60px hsl(var(--friends-orange) / 0.2)",
+            }}
+          >
+            "I'll be there for you."
+          </h2>
+          <motion.p
+            className="text-lg sm:text-2xl font-display font-bold"
+            style={{
+              color: "hsl(var(--foreground))",
+              textShadow: "0 0 20px hsl(var(--friends-orange) / 0.3)",
+            }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.8 }}
+          >
+            ✨ The One Where Shivani Has The Best Birthday! ✨
+          </motion.p>
+        </motion.div>
       )}
 
       {/* Portal */}
