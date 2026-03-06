@@ -1,21 +1,21 @@
 import { motion, AnimatePresence } from "framer-motion";
 import orangeCouch from "@/assets/friends/orange_couch.png";
-import rossImg from "@/assets/friends/ross.png";
+import rossImg from "@/assets/friends/ross_standing.png";
 import monicaImg from "@/assets/friends/monica.png";
 import chandlerImg from "@/assets/friends/chandler.png";
 import rachelImg from "@/assets/friends/rachel.png";
 import joeyImg from "@/assets/friends/joey.png";
-import phoebeImg from "@/assets/friends/phoebe.png";
+import phoebeImg from "@/assets/friends/phoebe_standing.png";
 import type { FriendCharacter } from "./FriendsTriviaGame";
 
 // 4 sitting on couch, 2 standing behind
 const CHARACTER_POSITIONS: Record<FriendCharacter, { left: string; bottom: string }> = {
-  Ross:     { left: "15%", bottom: "68%" },   // standing behind left
-  Monica:   { left: "20%", bottom: "38%" },   // sitting
-  Chandler: { left: "35%", bottom: "38%" },   // sitting
-  Rachel:   { left: "50%", bottom: "38%" },   // sitting
-  Joey:     { left: "65%", bottom: "38%" },   // sitting
-  Phoebe:   { left: "72%", bottom: "68%" },   // standing behind right
+  Ross:     { left: "8%",  bottom: "62%" },
+  Monica:   { left: "22%", bottom: "38%" },
+  Chandler: { left: "36%", bottom: "38%" },
+  Rachel:   { left: "50%", bottom: "38%" },
+  Joey:     { left: "64%", bottom: "38%" },
+  Phoebe:   { left: "78%", bottom: "62%" },
 };
 
 const CHARACTER_COLORS: Record<FriendCharacter, string> = {
