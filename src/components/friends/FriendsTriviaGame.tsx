@@ -30,18 +30,6 @@ const QUESTIONS: TriviaQuestion[] = [
     revealNote: "Gunther watches from behind the counter...",
   },
   {
-    question: "What phrase does Joey famously say?",
-    options: ["How you doin?", "What's up?", "Nice to meet you"],
-    correctIndex: 0,
-    revealCharacter: "Joey",
-  },
-  {
-    question: "What instrument does Phoebe play?",
-    options: ["Guitar", "Piano", "Violin"],
-    correctIndex: 0,
-    revealCharacter: "Phoebe",
-  },
-  {
     question: "Who was Monica's brother?",
     options: ["Ross", "Chandler", "Joey"],
     correctIndex: 0,
@@ -62,6 +50,18 @@ const QUESTIONS: TriviaQuestion[] = [
     options: ["Rachel", "Monica", "Phoebe"],
     correctIndex: 0,
     revealCharacter: "Rachel",
+  },
+  {
+    question: "What phrase does Joey famously say?",
+    options: ["How you doin?", "What's up?", "Nice to meet you"],
+    correctIndex: 0,
+    revealCharacter: "Joey",
+  },
+  {
+    question: "What instrument does Phoebe play?",
+    options: ["Guitar", "Piano", "Violin"],
+    correctIndex: 0,
+    revealCharacter: "Phoebe",
   },
 ];
 

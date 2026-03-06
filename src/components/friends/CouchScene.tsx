@@ -3,12 +3,12 @@ import orangeCouch from "@/assets/friends/orange_couch.png";
 import type { FriendCharacter } from "./FriendsTriviaGame";
 
 const CHARACTER_POSITIONS: Record<FriendCharacter, { left: string; bottom: string }> = {
-  Ross: { left: "5%", bottom: "55%" },
-  Joey: { left: "18%", bottom: "58%" },
-  Phoebe: { left: "33%", bottom: "55%" },
-  Monica: { left: "50%", bottom: "58%" },
-  Chandler: { left: "65%", bottom: "55%" },
-  Rachel: { left: "80%", bottom: "58%" },
+  Ross:     { left: "5%",  bottom: "55%" },
+  Monica:   { left: "18%", bottom: "58%" },
+  Chandler: { left: "33%", bottom: "55%" },
+  Rachel:   { left: "50%", bottom: "58%" },
+  Joey:     { left: "65%", bottom: "55%" },
+  Phoebe:   { left: "80%", bottom: "58%" },
 };
 
 const CHARACTER_COLORS: Record<FriendCharacter, string> = {
@@ -37,7 +37,7 @@ interface Props {
 
 export default function CouchScene({ revealedCharacters, showReveal, latestChar }: Props) {
   return (
-    <div className="relative w-full max-w-lg mx-auto" style={{ height: 180 }}>
+    <div className="relative w-full max-w-lg mx-auto" style={{ height: 220 }}>
       {/* Couch */}
       <img
         src={orangeCouch}
@@ -57,14 +57,39 @@ export default function CouchScene({ revealedCharacters, showReveal, latestChar 
               key={char}
               className="absolute flex flex-col items-center"
               style={{ left: pos.left, bottom: pos.bottom }}
-              initial={{ opacity: 0, scale: 0, filter: "blur(10px)" }}
+              initial={{ opacity: 0, scale: 0, y: -30 }}
               animate={{
                 opacity: 1,
                 scale: 1,
-                filter: "blur(0px)",
+                y: 0,
               }}
-              transition={{ duration: 0.8, type: "spring" }}
+              transition={{ duration: 0.6, type: "spring", bounce: 0.5 }}
             >
+              {/* Sparkle particles on reveal */}
+              {isLatest && (
+                <>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <motion.div
+                      key={`sparkle-${i}`}
+                      className="absolute rounded-full"
+                      style={{
+                        width: 4,
+                        height: 4,
+                        background: `hsl(${color})`,
+                      }}
+                      initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+                      animate={{
+                        opacity: 0,
+                        scale: 0,
+                        x: (Math.random() - 0.5) * 60,
+                        y: (Math.random() - 0.5) * 60,
+                      }}
+                      transition={{ duration: 0.8, delay: i * 0.05 }}
+                    />
+                  ))}
+                </>
+              )}
+
               {/* Character circle */}
               <motion.div
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-lg sm:text-xl"
@@ -74,7 +99,7 @@ export default function CouchScene({ revealedCharacters, showReveal, latestChar 
                     ? `0 0 20px hsl(${color} / 0.6), 0 0 40px hsl(${color} / 0.3)`
                     : `0 0 10px hsl(${color} / 0.3)`,
                 }}
-                animate={isLatest ? { scale: [1, 1.2, 1] } : {}}
+                animate={isLatest ? { scale: [1, 1.3, 1] } : {}}
                 transition={{ duration: 0.5 }}
               >
                 {CHARACTER_EMOJI[char]}
@@ -88,6 +113,29 @@ export default function CouchScene({ revealedCharacters, showReveal, latestChar 
             </motion.div>
           );
         })}
+      </AnimatePresence>
+
+      {/* "X HAS JOINED THE COUCH!" text */}
+      <AnimatePresence>
+        {showReveal && latestChar && (
+          <motion.div
+            className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <span
+              className="text-sm sm:text-base font-display font-bold tracking-wider uppercase"
+              style={{
+                color: "hsl(var(--friends-orange))",
+                textShadow: "0 0 20px hsl(var(--friends-orange) / 0.5)",
+              }}
+            >
+              {latestChar} has joined the couch! 🎉
+            </span>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
