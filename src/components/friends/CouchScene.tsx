@@ -8,13 +8,14 @@ import joeyImg from "@/assets/friends/joey.png";
 import phoebeImg from "@/assets/friends/phoebe.png";
 import type { FriendCharacter } from "./FriendsTriviaGame";
 
+// 4 sitting on couch, 2 standing behind
 const CHARACTER_POSITIONS: Record<FriendCharacter, { left: string; bottom: string }> = {
-  Ross:     { left: "2%",  bottom: "38%" },
-  Monica:   { left: "16%", bottom: "38%" },
-  Chandler: { left: "30%", bottom: "38%" },
-  Rachel:   { left: "48%", bottom: "38%" },
-  Joey:     { left: "64%", bottom: "38%" },
-  Phoebe:   { left: "78%", bottom: "38%" },
+  Ross:     { left: "15%", bottom: "68%" },   // standing behind left
+  Monica:   { left: "20%", bottom: "38%" },   // sitting
+  Chandler: { left: "35%", bottom: "38%" },   // sitting
+  Rachel:   { left: "50%", bottom: "38%" },   // sitting
+  Joey:     { left: "65%", bottom: "38%" },   // sitting
+  Phoebe:   { left: "72%", bottom: "68%" },   // standing behind right
 };
 
 const CHARACTER_COLORS: Record<FriendCharacter, string> = {
