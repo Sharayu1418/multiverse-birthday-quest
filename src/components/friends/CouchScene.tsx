@@ -96,19 +96,22 @@ export default function CouchScene({ revealedCharacters, showReveal, latestChar 
                 </>
               )}
 
-              {/* Character circle */}
+              {/* Character image */}
               <motion.div
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-lg sm:text-xl"
+                className="w-14 h-20 sm:w-16 sm:h-24 rounded-lg overflow-hidden"
                 style={{
-                  background: `radial-gradient(circle, hsl(${color}), hsl(${color} / 0.6))`,
                   boxShadow: isLatest
                     ? `0 0 20px hsl(${color} / 0.6), 0 0 40px hsl(${color} / 0.3)`
                     : `0 0 10px hsl(${color} / 0.3)`,
                 }}
-                animate={isLatest ? { scale: [1, 1.3, 1] } : {}}
+                animate={isLatest ? { scale: [1, 1.15, 1] } : {}}
                 transition={{ duration: 0.5 }}
               >
-                {CHARACTER_EMOJI[char]}
+                <img
+                  src={CHARACTER_IMAGES[char]}
+                  alt={char}
+                  className="w-full h-full object-cover object-top"
+                />
               </motion.div>
               <span
                 className="text-[10px] sm:text-xs font-body font-medium mt-1"
