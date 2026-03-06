@@ -1,5 +1,5 @@
-import HarryPotterForbiddenForest from "@/components/potter/HarryPotterForbiddenForest";
+import MaraudersMapMaze from "@/components/potter/MaraudersMapMaze";
 
 export default function PotterPuzzlePage() {
-  return <HarryPotterForbiddenForest />;
+  return <MaraudersMapMaze />;
 }
