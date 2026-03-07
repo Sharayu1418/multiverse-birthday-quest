@@ -12,6 +12,7 @@ import StrangerPuzzlePage from "./pages/StrangerPuzzlePage";
 import StrangerSignalPage from "./pages/StrangerSignalPage";
 import VecnaPuzzlePage from "./pages/VecnaPuzzlePage";
 import FriendsPuzzlePage from "./pages/FriendsPuzzlePage";
+import PercyPuzzlePage from "./pages/PercyPuzzlePage";
 import FinalePage from "./pages/FinalePage";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/hub" element={<HubPage />} />
           <Route path="/world/marvel" element={<MarvelPuzzlePage />} />
           <Route path="/world/potter" element={<PotterPuzzlePage />} />
+          <Route path="/world/percy" element={<PercyPuzzlePage />} />
           <Route path="/world/stranger" element={<StrangerPuzzlePage />} />
           <Route path="/world/stranger-things" element={<StrangerSignalPage />} />
           <Route path="/world/stranger-vecna" element={<VecnaPuzzlePage />} />

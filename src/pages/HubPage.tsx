@@ -14,7 +14,6 @@ export default function HubPage() {
   const { isSolved } = useGameProgress();
   const visibleWorlds = worlds.filter((world) => !HIDDEN_HUB_WORLDS.includes(world.id));
   const visibleSolvedCount = visibleWorlds.filter((world) => isSolved(world.id)).length;
-  const visibleAllSolved = visibleSolvedCount === visibleWorlds.length;
 
   return (
     <div className="relative min-h-[100dvh] starfield overflow-hidden">
@@ -79,31 +78,8 @@ export default function HubPage() {
             </div>
           ))}
         </div>
-
-        {/* All solved CTA */}
-        {visibleAllSolved && (
-          <motion.div
-            className="text-center mt-8 sm:mt-12"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            <motion.button
-              onClick={() => navigate("/finale")}
-              className="px-8 sm:px-10 py-3 sm:py-4 rounded-full font-body font-semibold text-base sm:text-lg
-                bg-gradient-to-r from-neon-cyan to-neon-pink
-                text-accent-foreground portal-glow cursor-pointer
-                transition-all duration-300 hover:scale-105"
-              whileHover={{ boxShadow: "0 0 60px hsl(180 85% 55% / 0.5)" }}
-              whileTap={{ scale: 0.95 }}
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              Enter the Final Portal ✨
-            </motion.button>
-          </motion.div>
-        )}
       </div>
     </div>
   );
 }
+
