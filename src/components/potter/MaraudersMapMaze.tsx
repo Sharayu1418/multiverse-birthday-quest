@@ -8,6 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 
 const TARGET_PHRASE = "i solemnly swear that i am up to no good";
 const PASSWORD = "PORTRAIT";
+const SCRAMBLED_PASSWORD = "TROAPIRT";
+const POTTER_VIDEO_URL = "https://streamable.com/e/01zydq?autoplay=1&loop=0";
+const FAT_LADY_VIDEO_URL = "https://streamable.com/e/zf1g3p?autoplay=1&loop=0";
 
 const MAZE = [
   "11111111111111111111111111111",
@@ -34,6 +37,10 @@ const COLS = MAZE[0].length;
 
 type Position = { x: number; y: number };
 type Enemy = { id: string; name: string; path: Position[]; speed: number };
+type FullscreenCapableElement = HTMLDivElement & {
+  webkitRequestFullscreen?: () => Promise<void> | void;
+  msRequestFullscreen?: () => Promise<void> | void;
+};
 
 // Letters scattered on valid path cells along/near the solution path
 const LETTER_POSITIONS: { letter: string; x: number; y: number }[] = [
@@ -60,9 +67,27 @@ const INITIAL_ENEMIES: Enemy[] = [
   },
   {
     id: "snape", name: "Severus Snape",
-    path: [{x:19,y:13},{x:20,y:13},{x:21,y:13}],
-    speed: 350
+    path: [
+      {x:17,y:9},{x:18,y:9},{x:19,y:9},
+      {x:19,y:10},{x:19,y:11},{x:19,y:12},{x:19,y:13},
+      {x:20,y:13},{x:21,y:13},
+      {x:21,y:12},{x:21,y:11},
+      {x:22,y:11},{x:23,y:11},
+      {x:23,y:12},{x:23,y:13},
+      {x:24,y:13},{x:25,y:13},{x:26,y:13},
+    ],
+    speed: 450
   }
+];
+
+const MAP_SPARKLES = [
+  { x: 9, y: 14, delay: 0.1, duration: 3.8 },
+  { x: 23, y: 22, delay: 0.7, duration: 4.4 },
+  { x: 38, y: 11, delay: 1.2, duration: 3.5 },
+  { x: 56, y: 19, delay: 0.4, duration: 4.2 },
+  { x: 72, y: 12, delay: 1.6, duration: 3.7 },
+  { x: 84, y: 28, delay: 0.9, duration: 4.1 },
+  { x: 66, y: 36, delay: 2.2, duration: 4.6 },
 ];
 
 export default function MaraudersMapMaze() {
@@ -71,8 +96,9 @@ export default function MaraudersMapMaze() {
   const alreadySolved = isSolved("potter");
   const { toast } = useToast();
 
-  const [phase, setPhase] = useState<"video" | "locked" | "playing" | "unscramble" | "caught" | "won">(alreadySolved ? "won" : "video");
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [phase, setPhase] = useState<"video" | "locked" | "playing" | "fatlady" | "unscramble" | "caught" | "won">(alreadySolved ? "won" : "video");
+  const fatLadyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
   const [typedPhrase, setTypedPhrase] = useState("");
   const [playerPos, setPlayerPos] = useState<Position>(START_POS);
   const [collectedLetters, setCollectedLetters] = useState<string[]>([]);
@@ -87,6 +113,150 @@ export default function MaraudersMapMaze() {
     ...e, currentIdx: 0, direction: 1
   })));
 
+  const hogwartsCtxRef = useRef<AudioContext | null>(null);
+
+  const playHogwartsTheme = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new AudioCtx();
+      hogwartsCtxRef.current = ctx;
+
+      const melody: [number, number][] = [
+        [493.88, 0.38], [659.25, 0.56], [783.99, 0.19], [739.99, 0.38],
+        [659.25, 0.75], [987.77, 0.38], [880.00, 1.13],
+        [739.99, 1.13],
+        [659.25, 0.56], [783.99, 0.19], [739.99, 0.38],
+        [622.25, 0.75], [698.46, 0.38], [493.88, 1.50],
+
+        [493.88, 0.38], [659.25, 0.56], [783.99, 0.19], [739.99, 0.38],
+        [659.25, 0.75], [987.77, 0.38], [1174.66, 0.75],
+        [1108.73, 0.38], [987.77, 0.75],
+        [1108.73, 0.56], [1046.50, 0.19], [880.00, 0.38],
+        [783.99, 0.75], [880.00, 0.38], [659.25, 1.50],
+      ];
+
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.15, ctx.currentTime);
+      masterGain.connect(ctx.destination);
+
+      const schedulePhrase = (startTime: number): number => {
+        let t = startTime;
+        for (const [freq, dur] of melody) {
+          const osc = ctx.createOscillator();
+          const noteGain = ctx.createGain();
+          osc.connect(noteGain);
+          noteGain.connect(masterGain);
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(freq, t);
+          noteGain.gain.setValueAtTime(0, t);
+          noteGain.gain.linearRampToValueAtTime(1, t + 0.04);
+          noteGain.gain.setValueAtTime(1, t + dur * 0.6);
+          noteGain.gain.linearRampToValueAtTime(0, t + dur);
+          osc.start(t);
+          osc.stop(t + dur + 0.01);
+          t += dur;
+        }
+        return t;
+      };
+
+      let t = ctx.currentTime + 0.2;
+      for (let i = 0; i < 8; i++) {
+        t = schedulePhrase(t) + 1.0;
+      }
+    } catch { /* audio unavailable */ }
+  }, []);
+
+  const stopHogwartsTheme = useCallback(() => {
+    if (hogwartsCtxRef.current) {
+      hogwartsCtxRef.current.close().catch(() => {});
+      hogwartsCtxRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (phase === "locked") {
+      playHogwartsTheme();
+    } else {
+      stopHogwartsTheme();
+    }
+    return () => { stopHogwartsTheme(); };
+  }, [phase, playHogwartsTheme, stopHogwartsTheme]);
+
+  const playCollectSound = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new AudioCtx();
+      const notes = [880, 1108, 1320];
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        const t = ctx.currentTime + i * 0.08;
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+        osc.start(t);
+        osc.stop(t + 0.25);
+      });
+    } catch { /* audio unavailable */ }
+  }, []);
+
+  const requestVideoFullscreen = useCallback(async () => {
+    const container = videoContainerRef.current as FullscreenCapableElement | null;
+    if (!container || document.fullscreenElement) return;
+
+    try {
+      if (container.requestFullscreen) {
+        await container.requestFullscreen();
+        return;
+      }
+
+      if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+        return;
+      }
+
+      if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
+      }
+    } catch {
+      // If fullscreen is blocked, keep playing in full viewport.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "video") return;
+    void requestVideoFullscreen();
+  }, [phase, requestVideoFullscreen]);
+
+  useEffect(() => {
+    if (phase === "video") return;
+    if (!document.fullscreenElement) return;
+
+    void document.exitFullscreen().catch(() => undefined);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "fatlady") return;
+    fatLadyTimerRef.current = setTimeout(() => {
+      setAvailablePool(SCRAMBLED_PASSWORD.split(""));
+      setSelectedOrder([]);
+      setPhase("unscramble");
+    }, 41000);
+    return () => {
+      if (fatLadyTimerRef.current) clearTimeout(fatLadyTimerRef.current);
+    };
+  }, [phase]);
+
+  const skipFatLady = useCallback(() => {
+    if (fatLadyTimerRef.current) clearTimeout(fatLadyTimerRef.current);
+    setAvailablePool(SCRAMBLED_PASSWORD.split(""));
+    setSelectedOrder([]);
+    setPhase("unscramble");
+  }, []);
+
   // Check letter collection when player moves
   useEffect(() => {
     if (phase !== "playing") return;
@@ -95,6 +265,7 @@ export default function MaraudersMapMaze() {
 
     const letterHere = LETTER_POSITIONS.find(l => l.x === playerPos.x && l.y === playerPos.y);
     if (letterHere) {
+      playCollectSound();
       setCollectedLetters(prev => [...prev, letterHere.letter]);
       setCollectedPositions(prev => new Set(prev).add(key));
       setRemainingLetters(prev => {
@@ -108,7 +279,7 @@ export default function MaraudersMapMaze() {
         duration: 2000,
       });
     }
-  }, [playerPos, phase, collectedPositions, collectedLetters.length, toast]);
+  }, [playerPos, phase, collectedPositions, collectedLetters.length, toast, playCollectSound]);
 
   // Handle typing to unlock
   useEffect(() => {
@@ -180,11 +351,7 @@ export default function MaraudersMapMaze() {
         toast({ title: "🔒 Door is locked!", description: `Collect all ${LETTER_POSITIONS.length} letters first! (${collectedLetters.length}/${LETTER_POSITIONS.length})`, duration: 3000 });
         setPlayerPos({ x: END_POS.x - 1, y: END_POS.y }); // push back
       } else {
-        // Shuffle letters for unscramble
-        const shuffled = [...collectedLetters].sort(() => Math.random() - 0.5);
-        setAvailablePool(shuffled);
-        setSelectedOrder([]);
-        setPhase("unscramble");
+        setPhase("fatlady");
       }
       return;
     }
@@ -222,70 +389,148 @@ export default function MaraudersMapMaze() {
       markSolved("potter");
     } else {
       toast({ title: "Wrong password!", description: "Try again — rearrange the letters to form the correct word.", duration: 3000 });
-      setAvailablePool([...selectedOrder, ...availablePool].sort(() => Math.random() - 0.5));
+      setAvailablePool(SCRAMBLED_PASSWORD.split(""));
       setSelectedOrder([]);
     }
   };
 
   return (
-    <MapParchment isRevealed={phase !== "locked"}>
-      {/* Back button */}
-      <motion.button
-        onClick={() => navigate("/hub")}
-        className="fixed top-6 left-6 flex items-center gap-2 text-[#3e2723] hover:text-[#2a1714] transition-colors font-body cursor-pointer z-30"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-      >
-        <ArrowLeft className="w-5 h-5" /> Back
-      </motion.button>
+    <>
+      {/* Back button — outside MapParchment so filter doesn't break fixed positioning */}
+      {phase !== "video" && phase !== "fatlady" && (
+        <motion.button
+          onClick={() => navigate("/hub")}
+          className="fixed top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full text-[#3e2723] hover:text-[#2a1714] bg-[#e8cd9c]/80 hover:bg-[#e8cd9c] backdrop-blur-sm transition-colors font-body cursor-pointer z-[60] border border-[#3e2723]/20 shadow-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </motion.button>
+      )}
 
-      <AnimatePresence mode="wait">
-        {/* Intro Video Phase */}
+      {/* Intro Video — rendered outside MapParchment so CSS filter doesn't
+          create a containing block that breaks fixed positioning */}
+      <AnimatePresence>
         {phase === "video" && (
           <motion.div
             key="video"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black flex flex-col items-center justify-center"
+            ref={videoContainerRef}
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center overflow-hidden"
           >
             <iframe
-              ref={iframeRef}
-              src="https://streamable.com/e/01zydq?autoplay=1"
+              src={POTTER_VIDEO_URL}
               frameBorder="0"
               allowFullScreen
-              allow="autoplay"
-              className="absolute inset-0 w-full h-full"
+              allow="autoplay; fullscreen; picture-in-picture"
+              className="absolute"
+              style={{
+                border: "none",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: "177.78vh",
+                height: "100vh",
+                minWidth: "100vw",
+                minHeight: "56.25vw",
+              }}
             />
             <motion.button
               onClick={() => setPhase("locked")}
               className="absolute bottom-8 right-8 px-6 py-3 bg-[#d4af37]/80 text-[#3e2723] rounded-full font-display text-sm hover:bg-[#d4af37] transition-colors cursor-pointer border border-[#b8860b] z-50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 3 }}
+              transition={{ delay: 1.5 }}
             >
               Skip to Map →
             </motion.button>
           </motion.div>
         )}
+      </AnimatePresence>
 
-        {phase === "locked" && (
-          <motion.div key="locked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center space-y-8">
-            <h2 className="text-3xl lg:text-5xl font-display uppercase tracking-widest text-[#3e2723] text-center border-b-2 border-[#3e2723] pb-4">
+      {/* Fat Lady Video — plays before the unscramble puzzle */}
+      <AnimatePresence>
+        {phase === "fatlady" && (
+          <motion.div
+            key="fatlady"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center overflow-hidden"
+          >
+            <iframe
+              src={FAT_LADY_VIDEO_URL}
+              frameBorder="0"
+              allowFullScreen
+              allow="autoplay; fullscreen; picture-in-picture"
+              className="absolute"
+              style={{
+                border: "none",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: "177.78vh",
+                height: "100vh",
+                minWidth: "100vw",
+                minHeight: "56.25vw",
+              }}
+            />
+            <motion.button
+              onClick={skipFatLady}
+              className="absolute bottom-8 right-8 px-6 py-3 bg-[#d4af37]/80 text-[#3e2723] rounded-full font-display text-sm hover:bg-[#d4af37] transition-colors cursor-pointer border border-[#b8860b] z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 3 }}
+            >
+              Skip →
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <MapParchment isRevealed={phase !== "locked"}>
+        <AnimatePresence mode="wait">
+          {phase === "locked" && (
+          <motion.div
+            key="locked"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center justify-center space-y-8 pt-14"
+          >
+            <h2 className="text-2xl lg:text-4xl font-display uppercase tracking-widest text-[#3e2723] text-center border-b-2 border-[#3e2723] pb-4">
               Moony, Wormtail, Padfoot, and Prongs
             </h2>
             <p className="text-xl lg:text-2xl font-display italic text-[#5c3e37] text-center mb-8">
-              Purveyors of Aids to Magical Mischief-Makers<br/>are proud to present
+              Purveyors of Aids to Magical Mischief-Makers
+              <br />
+              are proud to present
             </p>
+
             <div className="w-full max-w-2xl bg-[#3e2723]/10 p-6 rounded text-center border border-[#3e2723]/30 min-h-[140px] flex items-center justify-center">
               {typedPhrase === "" ? (
-                <span className="text-xl text-[#3e2723]/50 animate-pulse font-serif">Speak the words (type) to reveal our secrets...</span>
+                <span className="text-xl text-[#3e2723]/50 animate-pulse font-serif">
+                  Speak the words (type) to reveal our secrets...
+                </span>
               ) : (
-                <span className="text-2xl lg:text-4xl font-serif text-[#3e2723] tracking-wide" style={{ fontFamily: "'Brush Script MT', cursive, serif" }}>
-                  {typedPhrase}<span className="animate-pulse">_</span>
+                <span
+                  className="text-2xl lg:text-4xl font-serif text-[#3e2723] tracking-wide"
+                  style={{ fontFamily: "'Brush Script MT', cursive, serif" }}
+                >
+                  {typedPhrase}
+                  <span className="animate-pulse">_</span>
                 </span>
               )}
             </div>
-            <input type="text" className="opacity-0 absolute top-0 w-1 h-1" value={typedPhrase}
+
+            <input
+              type="text"
+              className="opacity-0 absolute top-0 w-1 h-1"
+              value={typedPhrase}
               onChange={(e) => {
                 const val = e.target.value.toLowerCase();
                 setTypedPhrase(val);
@@ -294,13 +539,24 @@ export default function MaraudersMapMaze() {
                   toast({ title: "The map reveals itself...", description: "Collect the scattered letters!", duration: 3000 });
                 }
               }}
-              autoFocus placeholder="Type here"
+              autoFocus
+              placeholder="Type here"
             />
           </motion.div>
         )}
 
         {(phase === "playing" || phase === "caught") && (
-          <motion.div key="maze" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative flex flex-col items-center justify-center w-full">
+          <motion.div
+            key="maze"
+            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: [0, -3, 0] }}
+            transition={{
+              opacity: { duration: 0.35 },
+              scale: { duration: 0.35 },
+              y: { duration: 6, repeat: Infinity, ease: "easeInOut" },
+            }}
+            className="relative flex flex-col items-center justify-center w-full"
+          >
             <div className="text-center mb-4">
               <p className="text-sm font-display italic text-[#5c3e37] tracking-wide mb-1" style={{ fontFamily: "'Cinzel Decorative', serif" }}>Messrs Moony, Wormtail, Padfoot & Prongs present</p>
               <h3 className="text-4xl lg:text-5xl font-display text-[#3e2723] mb-1" style={{ fontFamily: "'Cinzel Decorative', serif", letterSpacing: '0.15em', textShadow: '1px 1px 2px rgba(62, 39, 35, 0.3)' }}>Shivani</h3>
@@ -308,7 +564,15 @@ export default function MaraudersMapMaze() {
             </div>
 
             {/* Letter Collection Bar */}
-            <div className="flex items-center gap-2 mb-4 bg-[#3e2723]/10 px-4 py-2 rounded-lg border border-[#3e2723]/30">
+            <motion.div
+              className="flex items-center gap-2 mb-4 bg-[#3e2723]/10 px-4 py-2 rounded-lg border border-[#3e2723]/30"
+              animate={{
+                boxShadow: collectedLetters.length > 0
+                  ? ["0 0 0 rgba(212,175,55,0)", "0 0 14px rgba(212,175,55,0.22)", "0 0 0 rgba(212,175,55,0)"]
+                  : "0 0 0 rgba(0,0,0,0)",
+              }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+            >
               <span className="text-sm font-display text-[#3e2723]/70">Letters:</span>
               {LETTER_POSITIONS.map((_, i) => (
                 <div key={i} className={`w-8 h-8 rounded flex items-center justify-center font-display font-bold text-lg border-2 transition-all ${
@@ -320,18 +584,65 @@ export default function MaraudersMapMaze() {
                 </div>
               ))}
               <span className="text-xs font-display text-[#3e2723]/50 ml-2">({collectedLetters.length}/{LETTER_POSITIONS.length})</span>
-            </div>
+            </motion.div>
 
             {/* Maze Grid */}
-            <div className="relative bg-[#2a1b18] border-4 border-[#3e2723] p-3 rounded-lg shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]"
-              style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`, width: "min(100%, 800px)", aspectRatio: `${COLS} / ${ROWS}` }}>
+            <motion.div
+              className="relative bg-[#2a1b18] border-4 border-[#3e2723] p-3 rounded-lg shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]"
+              style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`, width: "min(100%, 800px)", aspectRatio: `${COLS} / ${ROWS}` }}
+              animate={{
+                boxShadow: [
+                  "inset 0 0 20px rgba(0,0,0,0.5), 0 0 0 rgba(212,175,55,0.06)",
+                  "inset 0 0 24px rgba(0,0,0,0.55), 0 0 24px rgba(212,175,55,0.15)",
+                  "inset 0 0 20px rgba(0,0,0,0.5), 0 0 0 rgba(212,175,55,0.06)",
+                ],
+              }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            >
               {MAZE.map((row, y) => row.split("").map((cell, x) => (
                 <div key={`${x}-${y}`} className={`w-full h-full ${
                   cell === "1" ? "bg-[#3e2723]/80"
-                  : cell === "E" ? "bg-red-900/40 border border-red-500/50 shadow-[0_0_15px_rgba(220,38,38,0.4)]"
                   : "bg-[#e8cd9c]/90 rounded-sm"
                 }`} />
               )))}
+
+              {MAP_SPARKLES.map((sparkle, idx) => (
+                <motion.div
+                  key={`map-sparkle-${idx}`}
+                  className="absolute pointer-events-none rounded-full"
+                  style={{
+                    left: `${sparkle.x}%`,
+                    top: `${sparkle.y}%`,
+                    width: "7px",
+                    height: "7px",
+                    background: "rgba(243, 229, 171, 0.72)",
+                    boxShadow: "0 0 12px rgba(212, 175, 55, 0.45)",
+                    zIndex: 6,
+                  }}
+                  animate={{ opacity: [0.15, 0.75, 0.15], scale: [0.75, 1.35, 0.75] }}
+                  transition={{
+                    duration: sparkle.duration,
+                    repeat: Infinity,
+                    delay: sparkle.delay,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+
+              {/* Gryffindor Common Room Gate */}
+              <motion.div
+                className="absolute flex items-center justify-center z-[5] pointer-events-none"
+                style={{ width: `${100/COLS}%`, height: `${100/ROWS}%`, left: `${(END_POS.x / COLS) * 100}%`, top: `${(END_POS.y / ROWS) * 100}%` }}
+              >
+                <svg viewBox="0 0 40 40" className="w-full h-full drop-shadow-lg" style={{ filter: "drop-shadow(0 0 6px rgba(116,0,1,0.6))" }}>
+                  <rect x="2" y="4" width="36" height="32" rx="4" fill="#740001" stroke="#d4af37" strokeWidth="2" />
+                  <rect x="6" y="8" width="12" height="20" rx="1" fill="#2a1b18" stroke="#b8860b" strokeWidth="1" />
+                  <rect x="22" y="8" width="12" height="20" rx="1" fill="#2a1b18" stroke="#b8860b" strokeWidth="1" />
+                  <circle cx="17" cy="18" r="1.5" fill="#d4af37" />
+                  <circle cx="23" cy="18" r="1.5" fill="#d4af37" />
+                  <text x="20" y="35" textAnchor="middle" fill="#d4af37" fontSize="5" fontWeight="bold">GCR</text>
+                </svg>
+              </motion.div>
 
               {/* Uncollected Letters on the Map */}
               {LETTER_POSITIONS.map((lp) => {
@@ -339,10 +650,10 @@ export default function MaraudersMapMaze() {
                 if (collectedPositions.has(key)) return null;
                 return (
                   <motion.div key={key}
-                    className="absolute flex items-center justify-center z-15 pointer-events-none"
+                    className="absolute flex items-center justify-center z-[15] pointer-events-none"
                     style={{ width: `${100/COLS}%`, height: `${100/ROWS}%`, left: `${(lp.x / COLS) * 100}%`, top: `${(lp.y / ROWS) * 100}%` }}
-                    animate={{ scale: [1, 1.15, 1], opacity: [0.8, 1, 0.8] }}
-                    transition={{ duration: 2, repeat: Infinity }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7], rotate: [0, -8, 8, 0] }}
+                    transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
                   >
                   <span className="text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
                       style={{ background: "linear-gradient(135deg, #d4af37, #f3e5ab)", color: "#3e2723", boxShadow: "0 0 8px rgba(212, 175, 55, 0.7)", fontSize: "12px" }}>
@@ -353,23 +664,50 @@ export default function MaraudersMapMaze() {
               })}
 
               {/* Player Avatar */}
-              <motion.div className="absolute text-2xl flex flex-col items-center justify-center z-20 drop-shadow-md"
+              <motion.div className="absolute flex flex-col items-center justify-center z-20 drop-shadow-md"
                 style={{ width: `${100/COLS}%`, height: `${100/ROWS}%`, left: `${(playerPos.x / COLS) * 100}%`, top: `${(playerPos.y / ROWS) * 100}%` }}
-                animate={{ left: `${(playerPos.x / COLS) * 100}%`, top: `${(playerPos.y / ROWS) * 100}%` }}
-              >👩🏻‍🎓</motion.div>
+                animate={{ left: `${(playerPos.x / COLS) * 100}%`, top: `${(playerPos.y / ROWS) * 100}%`, y: [0, -2, 0] }}
+                transition={{
+                  left: { type: "spring", stiffness: 360, damping: 30 },
+                  top: { type: "spring", stiffness: 360, damping: 30 },
+                  y: { duration: 1.2, repeat: Infinity, ease: "easeInOut" },
+                }}
+              >
+                <span className="text-lg leading-none" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.4)" }}>👩🏻‍🎓</span>
+              </motion.div>
 
               {/* Enemies */}
               {enemyStates.map(enemy => {
                 const pos = enemy.path[enemy.currentIdx];
                 return (
-                  <motion.div key={enemy.id} className="absolute text-2xl flex items-center justify-center z-10 drop-shadow-md bg-transparent"
+                  <motion.div key={enemy.id} className="absolute flex flex-col items-center justify-center z-10 pointer-events-none"
                     style={{ width: `${100/COLS}%`, height: `${100/ROWS}%`, left: `${(pos.x / COLS) * 100}%`, top: `${(pos.y / ROWS) * 100}%` }}
-                    animate={{ left: `${(pos.x / COLS) * 100}%`, top: `${(pos.y / ROWS) * 100}%` }}
-                    transition={{ type: "tween", ease: "linear", duration: 0.8 }}
-                  >{enemy.id === "norris" ? "🐈‍⬛" : "🕴️"}</motion.div>
+                    animate={{ left: `${(pos.x / COLS) * 100}%`, top: `${(pos.y / ROWS) * 100}%`, y: [0, -1.6, 0] }}
+                    transition={{
+                      left: { type: "tween", ease: "linear", duration: 0.8 },
+                      top: { type: "tween", ease: "linear", duration: 0.8 },
+                      y: { duration: 1.4, repeat: Infinity, ease: "easeInOut", delay: enemy.currentIdx * 0.1 },
+                    }}
+                  >
+                    {enemy.id === "norris" ? (
+                      <span className="leading-none" style={{ fontSize: "clamp(10px, 1.8vw, 22px)" }}>🐈</span>
+                    ) : (
+                      <img
+                        src={enemy.id === "snape" ? "/images/snape.png" : "/images/filch.png"}
+                        alt={enemy.name}
+                        className="rounded-full object-cover border border-[#d4af37]"
+                        style={{
+                          width: "clamp(18px, 2.4vw, 30px)",
+                          height: "clamp(18px, 2.4vw, 30px)",
+                          boxShadow: "0 0 6px rgba(0,0,0,0.6)",
+                        }}
+                      />
+                    )}
+                    <span className="text-[5px] lg:text-[7px] font-display text-[#f3e5ab] whitespace-nowrap leading-none mt-px" style={{ textShadow: "0 0 3px rgba(0,0,0,0.8)" }}>{enemy.name}</span>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
 
             {/* Mobile Controls */}
             <div className="mt-6 grid grid-cols-3 gap-2 lg:hidden">
@@ -474,6 +812,7 @@ export default function MaraudersMapMaze() {
           </motion.div>
         )}
       </AnimatePresence>
-    </MapParchment>
+      </MapParchment>
+    </>
   );
 }

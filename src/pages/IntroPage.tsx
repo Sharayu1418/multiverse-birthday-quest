@@ -6,13 +6,13 @@ export default function IntroPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center starfield overflow-hidden">
+    <div className="relative min-h-[100dvh] flex items-center justify-center starfield overflow-hidden">
       <StarfieldBackground />
 
       {/* Portal glow behind content */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <motion.div
-          className="w-[500px] h-[500px] rounded-full bg-cosmic-purple/10 blur-[120px]"
+          className="w-[280px] h-[280px] sm:w-[400px] sm:h-[400px] lg:w-[500px] lg:h-[500px] rounded-full bg-cosmic-purple/10 blur-[80px] sm:blur-[120px]"
           animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -22,10 +22,10 @@ export default function IntroPage() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut" }}
-        className="relative z-10 text-center px-6 max-w-2xl"
+        className="relative z-10 text-center px-5 sm:px-8 max-w-2xl w-full"
       >
         <motion.h1
-          className="text-4xl sm:text-6xl lg:text-7xl font-display font-bold mb-6 glow-text-purple"
+          className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-4 sm:mb-6 glow-text-purple"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, duration: 0.8 }}
@@ -35,7 +35,7 @@ export default function IntroPage() {
         </motion.h1>
 
         <motion.p
-          className="text-base sm:text-lg leading-relaxed mb-10 text-muted-foreground max-w-lg mx-auto"
+          className="text-sm sm:text-base md:text-lg leading-relaxed mb-8 sm:mb-10 text-muted-foreground max-w-md sm:max-w-lg mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.8 }}
@@ -49,7 +49,7 @@ export default function IntroPage() {
 
         <motion.button
           onClick={() => navigate("/hub")}
-          className="relative px-10 py-4 rounded-full font-body font-semibold text-lg
+          className="relative px-8 sm:px-10 py-3 sm:py-4 rounded-full font-body font-semibold text-base sm:text-lg
             bg-gradient-to-r from-cosmic-purple to-neon-pink
             text-primary-foreground
             portal-glow cursor-pointer
