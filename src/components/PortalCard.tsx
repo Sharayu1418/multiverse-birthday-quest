@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { WorldData, WorldId } from "@/lib/worldsData";
-import { Check } from "lucide-react";
+import { playWorldTheme, stopWorldTheme } from "@/utils/worldThemeMusic";
 
 import marvelImg from "@/assets/hub/marvel-Picsart-BackgroundRemover.png";
 import potterImg from "@/assets/hub/harry potter-Picsart-BackgroundRemover.png";
@@ -55,12 +55,15 @@ export default function PortalCard({ world, solved, index }: PortalCardProps) {
     navigate(route);
   };
 
+  const isStranger = world.id === "stranger";
+
   return (
     <motion.button
       onClick={navigateToWorld}
+      onMouseEnter={() => playWorldTheme(world.id)}
+      onMouseLeave={stopWorldTheme}
       className="group relative flex flex-col items-center gap-2 sm:gap-3 p-4 sm:p-5 lg:p-6 rounded-xl sm:rounded-2xl
-        border border-border/50 bg-card/50 backdrop-blur-sm cursor-pointer
-        transition-colors duration-300 w-full"
+        border border-border/50 backdrop-blur-sm cursor-pointer transition-colors duration-300 w-full bg-card/50"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
@@ -82,19 +85,14 @@ export default function PortalCard({ world, solved, index }: PortalCardProps) {
 
       {/* World image */}
       <div
-        className={`relative w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center overflow-hidden
-          bg-gradient-to-br ${world.colorClass} ${solved ? "animate-pulse-glow" : ""}`}
+        className={`relative w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center overflow-hidden
+          ${isStranger ? "bg-white" : `bg-gradient-to-br ${world.colorClass}`} ${solved ? "animate-pulse-glow" : ""}`}
       >
-        {solved && (
-          <div className="absolute inset-0 bg-black/30 z-10 flex items-center justify-center">
-            <Check className="w-6 h-6 sm:w-7 sm:h-7 text-primary-foreground drop-shadow-lg" />
-          </div>
-        )}
         {worldImage ? (
           <img
             src={worldImage}
             alt={world.name}
-            className="w-full h-full object-cover scale-110"
+            className="w-[85%] h-[85%] object-contain drop-shadow-md"
           />
         ) : (
           <span className="text-2xl text-primary-foreground font-display font-bold">
@@ -108,7 +106,10 @@ export default function PortalCard({ world, solved, index }: PortalCardProps) {
       </span>
 
       {solved && (
-        <span className="text-[10px] sm:text-xs font-body text-neon-cyan glow-text">
+        <span
+          className="text-[10px] sm:text-xs font-body font-medium"
+          style={{ color: `hsl(${world.glowColor})`, textShadow: `0 0 12px hsl(${world.glowColor} / 0.6)` }}
+        >
           ✓ Restored
         </span>
       )}
