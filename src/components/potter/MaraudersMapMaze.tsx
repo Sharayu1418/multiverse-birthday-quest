@@ -9,8 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 const TARGET_PHRASE = "i solemnly swear that i am up to no good";
 const PASSWORD = "PORTRAIT";
 const SCRAMBLED_PASSWORD = "TROAPIRT";
-const POTTER_VIDEO_URL = "https://streamable.com/e/01zydq?autoplay=1&loop=0";
-const FAT_LADY_VIDEO_URL = "https://streamable.com/e/zf1g3p?autoplay=1&loop=0";
+const POTTER_VIDEO_SRC = "/videos/harry-potter-intro.mp4";
+const FAT_LADY_VIDEO_SRC = "/videos/fat-lady.mp4";
 
 const MAZE = [
   "11111111111111111111111111111",
@@ -99,6 +99,8 @@ export default function MaraudersMapMaze() {
   const [phase, setPhase] = useState<"video" | "locked" | "playing" | "fatlady" | "unscramble" | "caught" | "won">(alreadySolved ? "won" : "video");
   const fatLadyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
+  const introVideoRef = useRef<HTMLVideoElement>(null);
+  const fatLadyVideoRef = useRef<HTMLVideoElement>(null);
   const [typedPhrase, setTypedPhrase] = useState("");
   const [playerPos, setPlayerPos] = useState<Position>(START_POS);
   const [collectedLetters, setCollectedLetters] = useState<string[]>([]);
@@ -229,29 +231,34 @@ export default function MaraudersMapMaze() {
   useEffect(() => {
     if (phase !== "video") return;
     void requestVideoFullscreen();
+    const vid = introVideoRef.current;
+    if (!vid) return;
+    vid.play().catch(() => {});
   }, [phase, requestVideoFullscreen]);
 
   useEffect(() => {
-    if (phase === "video") return;
+    if (phase === "video" || phase === "fatlady") return;
     if (!document.fullscreenElement) return;
-
     void document.exitFullscreen().catch(() => undefined);
   }, [phase]);
 
   useEffect(() => {
     if (phase !== "fatlady") return;
-    fatLadyTimerRef.current = setTimeout(() => {
+    const vid = fatLadyVideoRef.current;
+    if (!vid) return;
+    vid.play().catch(() => {});
+    const onEnded = () => {
       setAvailablePool(SCRAMBLED_PASSWORD.split(""));
       setSelectedOrder([]);
       setPhase("unscramble");
-    }, 41000);
-    return () => {
-      if (fatLadyTimerRef.current) clearTimeout(fatLadyTimerRef.current);
     };
+    vid.addEventListener("ended", onEnded);
+    return () => vid.removeEventListener("ended", onEnded);
   }, [phase]);
 
   const skipFatLady = useCallback(() => {
-    if (fatLadyTimerRef.current) clearTimeout(fatLadyTimerRef.current);
+    const vid = fatLadyVideoRef.current;
+    if (vid) { vid.pause(); vid.currentTime = 0; }
     setAvailablePool(SCRAMBLED_PASSWORD.split(""));
     setSelectedOrder([]);
     setPhase("unscramble");
@@ -421,22 +428,13 @@ export default function MaraudersMapMaze() {
             ref={videoContainerRef}
             className="fixed inset-0 z-50 bg-black flex items-center justify-center overflow-hidden"
           >
-            <iframe
-              src={POTTER_VIDEO_URL}
-              frameBorder="0"
-              allowFullScreen
-              allow="autoplay; fullscreen; picture-in-picture"
-              className="absolute"
-              style={{
-                border: "none",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: "177.78vh",
-                height: "100vh",
-                minWidth: "100vw",
-                minHeight: "56.25vw",
-              }}
+            <video
+              ref={introVideoRef}
+              src={POTTER_VIDEO_SRC}
+              playsInline
+              onEnded={() => setPhase("locked")}
+              className="w-full h-full object-cover"
+              style={{ background: "black" }}
             />
             <motion.button
               onClick={() => setPhase("locked")}
@@ -462,22 +460,12 @@ export default function MaraudersMapMaze() {
             transition={{ duration: 0.6 }}
             className="fixed inset-0 z-50 bg-black flex items-center justify-center overflow-hidden"
           >
-            <iframe
-              src={FAT_LADY_VIDEO_URL}
-              frameBorder="0"
-              allowFullScreen
-              allow="autoplay; fullscreen; picture-in-picture"
-              className="absolute"
-              style={{
-                border: "none",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: "177.78vh",
-                height: "100vh",
-                minWidth: "100vw",
-                minHeight: "56.25vw",
-              }}
+            <video
+              ref={fatLadyVideoRef}
+              src={FAT_LADY_VIDEO_SRC}
+              playsInline
+              className="w-full h-full object-cover"
+              style={{ background: "black" }}
             />
             <motion.button
               onClick={skipFatLady}

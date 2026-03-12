@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { WorldData, WorldId } from "@/lib/worldsData";
 import { playWorldTheme, stopWorldTheme } from "@/utils/worldThemeMusic";
 
-import marvelImg from "@/assets/hub/marvel-Picsart-BackgroundRemover.png";
-import potterImg from "@/assets/hub/harry potter-Picsart-BackgroundRemover.png";
-import percyImg from "@/assets/hub/percy jackson-Picsart-BackgroundRemover.webp";
-import friendsImg from "@/assets/hub/friend-Picsart-BackgroundRemover.png";
-import strangerImg from "@/assets/hub/stranger things-Picsart-BackgroundRemover.png";
+import marvelImg from "@/assets/hub/marvel.png";
+import potterImg from "@/assets/hub/harry-potter.png";
+import percyImg from "@/assets/hub/percy-jackson.webp";
+import friendsImg from "@/assets/hub/friends.png";
+import strangerImg from "@/assets/hub/stranger-things.png";
 
 const worldImages: Partial<Record<WorldId, string>> = {
   marvel: marvelImg,
