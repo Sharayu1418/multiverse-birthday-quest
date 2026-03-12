@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Droplets, ShieldCheck, Waves, Zap } from "lucide-react";
 import { useGameProgress } from "@/hooks/useGameProgress";
-import percyHero from "@/assets/hub/percy jackson-Picsart-BackgroundRemover.webp";
+import percyHero from "@/assets/hub/percy-jackson.webp";
 
 type PercyPhase = "intro" | "puzzle" | "won";
 type Dir = "N" | "E" | "S" | "W";
