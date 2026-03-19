@@ -1,170 +1,224 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import orangeCouch from "@/assets/friends/orange_couch.png";
-
-const ALL_CHARS = ["Ross", "Monica", "Chandler", "Rachel", "Joey", "Phoebe"];
-const EMOJIS: Record<string, string> = {
-  Ross: "🦕", Joey: "🍕", Phoebe: "🎸", Monica: "👩‍🍳", Chandler: "😏", Rachel: "👗",
-};
 
 interface Props {
   onReturn: () => void;
 }
 
+interface StreamableVideoFile {
+  url?: string;
+}
+
+interface StreamableVideoResponse {
+  files?: {
+    mp4?: StreamableVideoFile;
+    "mp4-mobile"?: StreamableVideoFile;
+  };
+}
+
+const GANG_VIDEO_CODE = "50rhx0";
+
 export default function FriendsFinale({ onReturn }: Props) {
-  const [showClap, setShowClap] = useState(false);
   const [showText, setShowText] = useState(false);
-  const [showPortal, setShowPortal] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const [hasFinishedVideo, setHasFinishedVideo] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setShowClap(true), 1500);
-    const t2 = setTimeout(() => setShowText(true), 3000);
-    const t3 = setTimeout(() => setShowPortal(true), 5000);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    const t1 = setTimeout(() => setShowText(true), 1000);
+    const t2 = setTimeout(() => setShowActions(true), 3000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, []);
+
+  const openGangVideo = async () => {
+    setShowVideoPlayer(true);
+    setVideoError(null);
+    setHasFinishedVideo(false);
+
+    if (videoUrl || isLoadingVideo) return;
+
+    setIsLoadingVideo(true);
+
+    try {
+      const response = await fetch(`https://api.streamable.com/videos/${GANG_VIDEO_CODE}`);
+      if (!response.ok) {
+        throw new Error("Unable to load video");
+      }
+
+      const data = (await response.json()) as StreamableVideoResponse;
+      const resolvedUrl = data.files?.mp4?.url ?? data.files?.["mp4-mobile"]?.url;
+
+      if (!resolvedUrl) {
+        throw new Error("Missing video source");
+      }
+
+      setVideoUrl(resolvedUrl.startsWith("//") ? `https:${resolvedUrl}` : resolvedUrl);
+    } catch {
+      setVideoError("The video could not load inside the app right now. Try again in a moment.");
+    } finally {
+      setIsLoadingVideo(false);
+    }
+  };
 
   return (
     <motion.div
-      className="text-center space-y-8 max-w-lg"
+      className={`w-full text-center flex flex-col items-center justify-center ${
+        showVideoPlayer
+          ? "max-w-4xl min-h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] gap-4 overflow-hidden"
+          : "max-w-3xl space-y-8"
+      }`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Fountain effect */}
-      <div className="relative w-full h-20 overflow-hidden">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              width: 3,
-              height: 3,
-              background: "hsl(200 70% 70% / 0.5)",
-              left: `${30 + Math.random() * 40}%`,
-              bottom: 0,
-            }}
-            animate={{
-              y: [0, -60 - Math.random() * 40],
-              x: [(Math.random() - 0.5) * 40],
-              opacity: [0, 0.8, 0],
-            }}
-            transition={{
-              duration: 1.5 + Math.random(),
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Couch with all characters */}
-      <div className="relative w-full mx-auto" style={{ height: 200 }}>
-        <img
-          src={orangeCouch}
-          alt="Couch"
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[85%] opacity-90"
-        />
-
-        {ALL_CHARS.map((char, i) => (
-          <motion.div
-            key={char}
-            className="absolute flex flex-col items-center"
-            style={{
-              left: `${8 + i * 15}%`,
-              bottom: i % 2 === 0 ? "55%" : "58%",
-            }}
-            animate={showClap ? { y: [0, -8, 0] } : {}}
-            transition={{
-              duration: 0.4,
-              delay: i * 0.08,
-              repeat: showClap ? 4 : 0,
-            }}
-          >
-            <div
-              className="w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-xl sm:text-2xl"
-              style={{
-                background: `hsl(var(--friends-orange) / 0.7)`,
-                boxShadow: "0 0 15px hsl(var(--friends-orange) / 0.4)",
-              }}
-            >
-              {EMOJIS[char]}
-            </div>
-            <span className="text-[10px] font-body mt-1" style={{ color: "hsl(var(--friends-orange))" }}>
-              {char}
-            </span>
-          </motion.div>
-        ))}
-
-        {/* Clap hands emoji */}
-        {showClap && (
-          <motion.div
-            className="absolute top-0 left-1/2 -translate-x-1/2 text-3xl"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: [0, 1, 1, 0], scale: [0.5, 1.2, 1, 0.8] }}
-            transition={{ duration: 2 }}
-          >
-            👏👏👏👏
-          </motion.div>
-        )}
-      </div>
-
-      {/* Quote */}
       {showText && (
-        <motion.div
-          className="space-y-3"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1 }}
+        <motion.p
+          className="text-lg sm:text-2xl font-display font-bold"
+          style={{
+            color: "hsl(var(--foreground))",
+            textShadow: "0 0 20px hsl(var(--friends-orange) / 0.3)",
+          }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
         >
-          <h2
-            className="text-xl sm:text-3xl font-display font-bold"
+          The One Where Shivani Has The Best Birthday!
+        </motion.p>
+      )}
+
+      {showVideoPlayer && (
+        <motion.div
+          className="w-full max-w-[min(92vw,760px)] space-y-3"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div
+            className="overflow-hidden rounded-2xl border backdrop-blur-md"
             style={{
-              color: "hsl(var(--friends-orange))",
-              textShadow: "0 0 30px hsl(var(--friends-orange) / 0.5), 0 0 60px hsl(var(--friends-orange) / 0.2)",
+              borderColor: "hsl(var(--friends-orange) / 0.35)",
+              background: "hsl(25 20% 10% / 0.78)",
+              boxShadow: "0 18px 60px hsl(25 60% 8% / 0.45)",
             }}
           >
-            "I'll be there for you."
-          </h2>
-          <motion.p
-            className="text-lg sm:text-2xl font-display font-bold"
-            style={{
-              color: "hsl(var(--foreground))",
-              textShadow: "0 0 20px hsl(var(--friends-orange) / 0.3)",
-            }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.8 }}
-          >
-            ✨ The One Where Shivani Has The Best Birthday! ✨
-          </motion.p>
+            <div className="flex items-center justify-between px-4 py-3 text-left border-b" style={{ borderColor: "hsl(var(--friends-orange) / 0.18)" }}>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em]" style={{ color: "hsl(var(--friends-orange) / 0.7)" }}>
+                  Special Clip
+                </p>
+                <p className="text-sm sm:text-base font-medium" style={{ color: "hsl(var(--foreground))" }}>
+                  Your gang is waiting for you
+                </p>
+              </div>
+              {hasFinishedVideo && (
+                <span className="text-xs uppercase tracking-[0.14em]" style={{ color: "hsl(var(--friends-orange))" }}>
+                  Watched
+                </span>
+              )}
+            </div>
+
+            <div className="p-3 sm:p-4">
+              {isLoadingVideo && (
+                <div className="flex items-center justify-center rounded-xl min-h-[240px] max-h-[min(54dvh,560px)]" style={{ background: "hsl(25 18% 12% / 0.75)" }}>
+                  <p className="text-sm font-body" style={{ color: "hsl(var(--foreground) / 0.82)" }}>
+                    Loading your gang's video...
+                  </p>
+                </div>
+              )}
+
+              {!isLoadingVideo && videoUrl && (
+                <video
+                  key={videoUrl}
+                  src={videoUrl}
+                  controls
+                  playsInline
+                  className="w-full rounded-xl object-contain max-h-[min(54dvh,560px)]"
+                  style={{ background: "hsl(25 20% 6%)" }}
+                  onEnded={() => setHasFinishedVideo(true)}
+                />
+              )}
+
+              {!isLoadingVideo && videoError && (
+                <div className="space-y-4 rounded-xl p-5" style={{ background: "hsl(25 18% 12% / 0.75)" }}>
+                  <p className="text-sm font-body" style={{ color: "hsl(var(--foreground) / 0.82)" }}>
+                    {videoError}
+                  </p>
+                  <motion.button
+                    onClick={openGangVideo}
+                    className="inline-flex px-6 py-2.5 rounded-md font-body font-medium text-sm tracking-wider uppercase cursor-pointer transition-all"
+                    style={{
+                      background: "hsl(var(--friends-orange) / 0.12)",
+                      border: "1px solid hsl(var(--friends-orange) / 0.55)",
+                      color: "hsl(var(--foreground))",
+                      letterSpacing: "0.1em",
+                    }}
+                    whileHover={{
+                      boxShadow: "0 0 30px hsl(var(--friends-orange) / 0.28)",
+                    }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    Retry Video
+                  </motion.button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {!hasFinishedVideo && videoUrl && (
+            <p className="text-xs font-body" style={{ color: "hsl(var(--friends-orange) / 0.68)" }}>
+              Return to Multiverse unlocks after the clip finishes.
+            </p>
+          )}
         </motion.div>
       )}
 
-      {/* Portal */}
-      {showPortal && (
+      {showActions && (
         <motion.div
-          className="flex flex-col items-center gap-4"
+          className="flex flex-col sm:flex-row items-center justify-center gap-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1 }}
         >
           <motion.button
-            onClick={onReturn}
-            className="px-8 py-3 rounded-full font-body font-semibold cursor-pointer"
+            onClick={openGangVideo}
+            className="px-8 py-2.5 rounded-md font-body font-medium text-sm tracking-wider uppercase cursor-pointer transition-all"
             style={{
-              background: "linear-gradient(135deg, hsl(var(--friends-orange)), hsl(var(--cosmic-purple)))",
-              color: "hsl(0 0% 100%)",
-              boxShadow: "0 0 30px hsl(var(--friends-orange) / 0.4), 0 0 60px hsl(var(--cosmic-purple) / 0.2)",
+              background: "hsl(var(--friends-orange) / 0.12)",
+              border: "1px solid hsl(var(--friends-orange) / 0.55)",
+              color: "hsl(var(--foreground))",
+              letterSpacing: "0.1em",
             }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            animate={{ y: [0, -4, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            whileHover={{
+              boxShadow: "0 0 30px hsl(var(--friends-orange) / 0.28)",
+            }}
+            whileTap={{ scale: 0.97 }}
           >
-            Return to the Multiverse ✨
+            {showVideoPlayer ? "Watch Your Gang Again" : "Go Take a Look at Your Gang"}
           </motion.button>
-          <p className="text-xs font-body" style={{ color: "hsl(var(--foreground) / 0.4)" }}>
-            The gang will always be here for you
-          </p>
+
+          {hasFinishedVideo && (
+            <motion.button
+              onClick={onReturn}
+              className="px-8 py-2.5 rounded-md font-body font-medium text-sm tracking-wider uppercase cursor-pointer transition-all"
+              style={{
+                background: "transparent",
+                border: "1px solid hsl(var(--friends-orange) / 0.5)",
+                color: "hsl(var(--friends-orange))",
+                letterSpacing: "0.12em",
+              }}
+              whileHover={{
+                boxShadow: "0 0 25px hsl(var(--friends-orange) / 0.3)",
+              }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Return to Multiverse
+            </motion.button>
+          )}
         </motion.div>
       )}
     </motion.div>

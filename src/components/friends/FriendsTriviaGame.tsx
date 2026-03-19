@@ -1,17 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import centralPerkBg from "@/assets/friends/central_perk_bg.jpg";
-import orangeCouch from "@/assets/friends/orange_couch.png";
 import QuestionCard from "./QuestionCard";
 import CouchScene from "./CouchScene";
 import FriendsFinale from "./FriendsFinale";
 
-type Phase = "intro" | "trivia" | "finale";
+type Phase = "intro" | "trivia" | "reveal" | "finale";
 
-const CHARACTERS = ["Ross", "Joey", "Phoebe", "Monica", "Chandler", "Rachel"] as const;
-export type FriendCharacter = (typeof CHARACTERS)[number];
+export type FriendCharacter = "Ross" | "Joey" | "Phoebe" | "Monica" | "Chandler" | "Rachel";
 
 export interface TriviaQuestion {
   question: string;
@@ -70,24 +68,126 @@ export default function FriendsTriviaGame() {
   const { markSolved } = useGameProgress();
   const [phase, setPhase] = useState<Phase>("intro");
   const [currentQ, setCurrentQ] = useState(0);
-  const [revealedChars, setRevealedChars] = useState<FriendCharacter[]>([]);
-  const [showReveal, setShowReveal] = useState(false);
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [showRevealText, setShowRevealText] = useState(false);
+  const tuneRef = useRef<HTMLAudioElement | null>(null);
+  const restoreAudioRef = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (tuneRef.current) {
+        tuneRef.current.pause();
+        tuneRef.current = null;
+      }
+
+      if (restoreAudioRef.current) {
+        void restoreAudioRef.current.close().catch(() => undefined);
+        restoreAudioRef.current = null;
+      }
+    };
+  }, []);
+
+  const primeRestoreAudio = () => {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+
+    if (!restoreAudioRef.current) {
+      restoreAudioRef.current = new Ctx();
+    }
+
+    if (restoreAudioRef.current.state === "suspended") {
+      void restoreAudioRef.current.resume();
+    }
+  };
+
+  const playRestoreTone = (step: number) => {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+
+    if (!restoreAudioRef.current) {
+      restoreAudioRef.current = new Ctx();
+    }
+
+    const audio = restoreAudioRef.current;
+    if (audio.state === "suspended") {
+      void audio.resume();
+    }
+
+    const now = audio.currentTime;
+    const basePitch = 430 + step * 38;
+
+    const lead = audio.createOscillator();
+    const shimmer = audio.createOscillator();
+    const gain = audio.createGain();
+    const shimmerGain = audio.createGain();
+    const filter = audio.createBiquadFilter();
+
+    lead.type = "triangle";
+    lead.frequency.setValueAtTime(basePitch, now);
+    lead.frequency.exponentialRampToValueAtTime(basePitch * 1.18, now + 0.16);
+
+    shimmer.type = "sine";
+    shimmer.frequency.setValueAtTime(basePitch * 1.5, now);
+    shimmer.frequency.exponentialRampToValueAtTime(basePitch * 1.75, now + 0.18);
+
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(2200, now);
+
+    lead.connect(filter);
+    shimmer.connect(shimmerGain);
+    shimmerGain.connect(filter);
+    filter.connect(gain);
+    gain.connect(audio.destination);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.055, now + 0.025);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+
+    shimmerGain.gain.setValueAtTime(0.0001, now);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.03, now + 0.03);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+
+    lead.start(now);
+    shimmer.start(now);
+    lead.stop(now + 0.32);
+    shimmer.stop(now + 0.26);
+  };
 
   const handleCorrectAnswer = () => {
-    const char = QUESTIONS[currentQ].revealCharacter;
-    setRevealedChars((prev) => [...prev, char]);
-    setShowReveal(true);
+    setRevealedCount((c) => {
+      const next = c + 1;
+      playRestoreTone(next);
+      return next;
+    });
+    setShowRevealText(true);
 
     setTimeout(() => {
-      setShowReveal(false);
+      setShowRevealText(false);
       if (currentQ + 1 >= QUESTIONS.length) {
-        markSolved("friends");
-        setPhase("finale");
+        setPhase("reveal");
       } else {
         setCurrentQ((p) => p + 1);
       }
-    }, 2000);
+    }, 1800);
   };
+
+  useEffect(() => {
+    if (phase !== "reveal") return;
+    const audio = new Audio("/audio/Friends Tune.mp3");
+    audio.volume = 0.5;
+    tuneRef.current = audio;
+    audio.play().catch(() => {});
+
+    const timer = setTimeout(() => {
+      markSolved("friends");
+      setPhase("finale");
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer);
+      audio.pause();
+    };
+  }, [phase, markSolved]);
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -133,7 +233,11 @@ export default function FriendsTriviaGame() {
         ))}
       </div>
 
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-8">
+      <div
+        className={`relative z-10 min-h-screen flex flex-col items-center justify-center px-4 ${
+          phase === "finale" ? "py-3 overflow-hidden" : "py-8"
+        }`}
+      >
         <AnimatePresence mode="wait">
           {/* INTRO */}
           {phase === "intro" && (
@@ -165,50 +269,40 @@ export default function FriendsTriviaGame() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
               >
-                Only true friends know the answers
+                Only true friends know the answers.
               </motion.p>
 
               <motion.p
                 className="text-sm font-body"
-                style={{ color: "hsl(var(--friends-orange) / 0.7)" }}
+                style={{ color: "hsl(var(--friends-orange) / 0.6)" }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.5 }}
               >
-                Answer the questions to gather the gang
+                Answer 6 questions to bring the gang back together.
               </motion.p>
 
-              {/* Couch preview */}
-              <motion.div
-                className="mt-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 2 }}
-              >
-                <img
-                  src={orangeCouch}
-                  alt="Orange Couch"
-                  className="w-48 sm:w-64 mx-auto opacity-60"
-                />
-              </motion.div>
-
               <motion.button
-                className="mt-8 px-8 py-3 rounded-full font-body font-semibold cursor-pointer"
+                className="mt-8 px-8 py-2.5 rounded-md font-body font-medium text-sm tracking-wider uppercase cursor-pointer transition-all"
                 style={{
-                  background:
-                    "linear-gradient(135deg, hsl(var(--friends-orange)), hsl(25 80% 45%))",
-                  color: "hsl(0 0% 100%)",
-                  boxShadow:
-                    "0 0 20px hsl(var(--friends-orange) / 0.4)",
+                  background: "transparent",
+                  border: "1px solid hsl(var(--friends-orange) / 0.5)",
+                  color: "hsl(var(--friends-orange))",
+                  letterSpacing: "0.12em",
                 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{
+                  boxShadow: "0 0 25px hsl(var(--friends-orange) / 0.3)",
+                }}
+                whileTap={{ scale: 0.97 }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 2.5 }}
-                onClick={() => setPhase("trivia")}
+                transition={{ delay: 2 }}
+                onClick={() => {
+                  primeRestoreAudio();
+                  setPhase("trivia");
+                }}
               >
-                Start Trivia ☕
+                Start Trivia
               </motion.button>
             </motion.div>
           )}
@@ -222,7 +316,7 @@ export default function FriendsTriviaGame() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {/* Progress */}
+              {/* Progress dots */}
               <div className="flex items-center justify-center gap-2 mb-4">
                 {QUESTIONS.map((_, i) => (
                   <div
@@ -230,13 +324,13 @@ export default function FriendsTriviaGame() {
                     className="w-3 h-3 rounded-full transition-all duration-300"
                     style={{
                       background:
-                        i < revealedChars.length
+                        i < revealedCount
                           ? "hsl(var(--friends-orange))"
                           : i === currentQ
                             ? "hsl(var(--friends-orange) / 0.5)"
                             : "hsl(var(--muted))",
                       boxShadow:
-                        i < revealedChars.length
+                        i < revealedCount
                           ? "0 0 8px hsl(var(--friends-orange) / 0.6)"
                           : "none",
                     }}
@@ -244,12 +338,15 @@ export default function FriendsTriviaGame() {
                 ))}
               </div>
 
-              {/* Couch with characters */}
-              <CouchScene revealedCharacters={revealedChars} showReveal={showReveal} latestChar={QUESTIONS[currentQ]?.revealCharacter} />
+              {/* Progressive image reveal */}
+              <CouchScene
+                revealedCount={revealedCount}
+                totalTiles={QUESTIONS.length}
+              />
 
-              {/* Question */}
+              {/* Question or reveal text */}
               <AnimatePresence mode="wait">
-                {!showReveal && (
+                {!showRevealText && (
                   <QuestionCard
                     key={currentQ}
                     question={QUESTIONS[currentQ]}
@@ -258,35 +355,54 @@ export default function FriendsTriviaGame() {
                   />
                 )}
 
-                {showReveal && (
-                  <motion.div
-                    key="reveal"
-                    className="text-center py-8"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <p
-                      className="text-2xl font-display font-bold"
-                      style={{
-                        color: "hsl(var(--friends-orange))",
-                        textShadow:
-                          "0 0 20px hsl(var(--friends-orange) / 0.5)",
-                      }}
-                    >
-                      {QUESTIONS[currentQ].revealCharacter} has joined! 🎉
-                    </p>
-                    {QUESTIONS[currentQ].revealNote && (
-                      <p
-                        className="text-sm font-body mt-2"
-                        style={{ color: "hsl(var(--foreground) / 0.6)" }}
-                      >
-                        {QUESTIONS[currentQ].revealNote}
-                      </p>
-                    )}
-                  </motion.div>
-                )}
               </AnimatePresence>
+            </motion.div>
+          )}
+
+          {/* FULL REVEAL */}
+          {phase === "reveal" && (
+            <motion.div
+              key="reveal"
+              className="w-full max-w-lg text-center space-y-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="relative w-full overflow-hidden rounded-lg" style={{ aspectRatio: "16 / 10" }}>
+                <img
+                  src="/images/friends_sketch.jpg"
+                  alt="The Gang"
+                  className="w-full h-full object-cover"
+                />
+                <motion.div
+                  className="absolute inset-0 rounded-lg"
+                  style={{
+                    boxShadow: "inset 0 0 40px hsl(var(--friends-orange) / 0.3)",
+                    border: "2px solid hsl(var(--friends-orange) / 0.4)",
+                  }}
+                  animate={{
+                    boxShadow: [
+                      "inset 0 0 40px hsl(25 80% 55% / 0.3)",
+                      "inset 0 0 60px hsl(25 80% 55% / 0.5)",
+                      "inset 0 0 40px hsl(25 80% 55% / 0.3)",
+                    ],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </div>
+
+              <motion.p
+                className="text-lg sm:text-2xl font-display font-bold"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 0.8 }}
+                style={{
+                  color: "hsl(var(--friends-orange))",
+                  textShadow: "0 0 20px hsl(var(--friends-orange) / 0.4)",
+                }}
+              >
+                The gang will always be there for you!
+              </motion.p>
             </motion.div>
           )}
 
@@ -294,7 +410,13 @@ export default function FriendsTriviaGame() {
           {phase === "finale" && (
             <FriendsFinale
               key="finale"
-              onReturn={() => navigate("/hub")}
+              onReturn={() => {
+                if (tuneRef.current) {
+                  tuneRef.current.pause();
+                  tuneRef.current = null;
+                }
+                navigate("/hub");
+              }}
             />
           )}
         </AnimatePresence>

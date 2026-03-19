@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, LayoutGroup } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import MarvelPortalCard from "./MarvelPortalCard";
@@ -69,6 +69,24 @@ export default function MarvelPortalGrid({ onSolved, alreadySolved, onBack }: Pr
 
   const [foundIronMan, setFoundIronMan] = useState(alreadySolved);
   const [showCenterReveal, setShowCenterReveal] = useState(false);
+  const ironManAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (!showCenterReveal) return;
+    const audio = new Audio("/audio/Iron Man.mp3");
+    audio.volume = 0.5;
+    ironManAudioRef.current = audio;
+    audio.play().catch(() => {});
+    const timer = setTimeout(() => {
+      audio.pause();
+      audio.currentTime = 0;
+    }, 5000);
+    return () => {
+      clearTimeout(timer);
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, [showCenterReveal]);
 
   // Shuffle only unopened cards' positions every 1.8s
   const shuffleUnopened = useCallback(() => {

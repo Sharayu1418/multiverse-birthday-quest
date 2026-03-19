@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Droplets, ShieldCheck, Waves, Zap } from "lucide-react";
+import { ArrowLeft, Crown, Droplets, ScrollText, ShieldCheck, Sparkles, Square, Volume2, Waves, Zap } from "lucide-react";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import percyHero from "@/assets/hub/percy-jackson.webp";
 
 type PercyPhase = "intro" | "puzzle" | "won";
+type PercyWinScene = "prophecy" | "blessing";
 type Dir = "N" | "E" | "S" | "W";
 
 type CellType =
@@ -44,6 +45,7 @@ const BOARD_ROWS = 6;
 const BOARD_COLS = 8;
 const MAX_MOVES = 28;
 const TOTAL_SEALS = 3;
+const QUEST_HERO_NAME = "Shivani";
 
 const DIR_ORDER: Dir[] = ["N", "E", "S", "W"];
 const DELTA: Record<Dir, { x: number; y: number }> = {
@@ -104,6 +106,45 @@ const GATE_HINT_ORDER = [
   "5,5",
 ];
 
+interface PercyVictoryProfile {
+  title: string;
+  trait: string;
+  prophecyLine: string;
+  blessingLine: string;
+}
+
+interface BlessingMessage {
+  speaker: "Percy" | "Annabeth" | "Grover";
+  text: string;
+  rate: number;
+  pitch: number;
+  voiceHints: string[];
+}
+
+const BLESSING_MESSAGES: BlessingMessage[] = [
+  {
+    speaker: "Percy",
+    text: "You turned a broken chamber into a victory current. Camp Half-Blood is cheering your name tonight.",
+    rate: 1.01,
+    pitch: 0.98,
+    voiceHints: ["davis", "david", "guy", "matthew", "alex"],
+  },
+  {
+    speaker: "Annabeth",
+    text: "You stayed clear-headed under pressure and engineered a perfect tide network. That's elite strategy.",
+    rate: 0.97,
+    pitch: 1.1,
+    voiceHints: ["zira", "aria", "jenny", "samantha", "susan"],
+  },
+  {
+    speaker: "Grover",
+    text: "The sea breeze feels peaceful again, and everyone is celebrating you. Happy Birthday, hero.",
+    rate: 0.92,
+    pitch: 1.05,
+    voiceHints: ["fred", "ralph", "daniel", "james", "george"],
+  },
+];
+
 const cellKey = (x: number, y: number) => `${x},${y}`;
 
 function parseCellKey(key: string) {
@@ -113,6 +154,55 @@ function parseCellKey(key: string) {
 
 function inBounds(x: number, y: number) {
   return x >= 0 && x < BOARD_COLS && y >= 0 && y < BOARD_ROWS;
+}
+
+function getVictoryProfile(movesUsed: number, hintsUsed: number, undosUsed: number): PercyVictoryProfile {
+  if (movesUsed <= 16 && hintsUsed === 0) {
+    return {
+      title: "Stormborn Strategist",
+      trait: "precision",
+      prophecyLine: "When the tide split three ways, your instincts read the currents before lightning could strike.",
+      blessingLine: "Poseidon marks you as a tactician of the waves, calm under thunder and sharp in every turn.",
+    };
+  }
+
+  if (hintsUsed <= 1 && undosUsed <= 2) {
+    return {
+      title: "Wavewise Pathfinder",
+      trait: "focus",
+      prophecyLine: "You listened to the sea between each choice, and every seal answered in rising harmony.",
+      blessingLine: "Olympus calls your focus rare: even when storms shifted, you found the truest channel.",
+    };
+  }
+
+  return {
+    title: "Steadfast Tidecaller",
+    trait: "resilience",
+    prophecyLine: "Even when channels collapsed, you rebuilt the flow and held the temple line without yielding.",
+    blessingLine: "Poseidon's court honors your resilience, the kind that restores worlds when others retreat.",
+  };
+}
+
+function createOracleLines(name: string, profile: PercyVictoryProfile) {
+  return [
+    `Child of courage, ${name}, hear the tide's decree.`,
+    profile.prophecyLine,
+    `At dawn on Olympus, your ${profile.trait} will be crowned in foam and starlight.`,
+  ];
+}
+
+function pickSpeechVoice(voices: SpeechSynthesisVoice[], voiceHints: string[]) {
+  if (voices.length === 0) return undefined;
+
+  const englishVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith("en"));
+  const candidates = englishVoices.length > 0 ? englishVoices : voices;
+
+  for (const hint of voiceHints) {
+    const match = candidates.find((voice) => voice.name.toLowerCase().includes(hint));
+    if (match) return match;
+  }
+
+  return candidates[0];
 }
 
 function createRockCell(): Cell {
@@ -360,17 +450,32 @@ export default function PercyPuzzlePage() {
   const [board, setBoard] = useState<Cell[][]>(() => createInitialBoard());
   const [movesUsed, setMovesUsed] = useState(0);
   const [history, setHistory] = useState<Cell[][][]>([]);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [undosUsed, setUndosUsed] = useState(0);
   const [focusedGateKey, setFocusedGateKey] = useState<string | null>(null);
+  const [winScene, setWinScene] = useState<PercyWinScene>("prophecy");
+  const [activeNarrationScene, setActiveNarrationScene] = useState<PercyWinScene | null>(null);
   const [hintText, setHintText] = useState("Rotate gates to connect Poseidon's fountain to all three seals.");
   const winTriggeredRef = useRef(false);
   const audioRef = useRef<AudioContext | null>(null);
+  const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const speechSessionRef = useRef(0);
   const playTone = useMemo(() => createTonePlayer(audioRef), []);
+  const narrationSupported = typeof window !== "undefined" && "speechSynthesis" in window;
 
   const flow = useMemo(() => simulateFlow(board), [board]);
   const poweredCount = flow.poweredSeals.size;
   const movesLeft = MAX_MOVES - movesUsed;
   const outOfMoves = movesLeft <= 0 && poweredCount < TOTAL_SEALS;
   const totalTargetGates = Object.keys(TARGET_ORIENTATIONS).length;
+  const victoryProfile = useMemo(
+    () => getVictoryProfile(movesUsed, hintsUsed, undosUsed),
+    [movesUsed, hintsUsed, undosUsed]
+  );
+  const oracleLines = useMemo(
+    () => createOracleLines(QUEST_HERO_NAME, victoryProfile),
+    [victoryProfile]
+  );
   const alignedGateCount = useMemo(
     () =>
       Object.entries(TARGET_ORIENTATIONS).reduce((count, [key, target]) => {
@@ -381,12 +486,117 @@ export default function PercyPuzzlePage() {
     [board]
   );
 
+  const stopNarration = useCallback(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    speechSessionRef.current += 1;
+    window.speechSynthesis.cancel();
+    speechUtteranceRef.current = null;
+    setActiveNarrationScene(null);
+  }, []);
+
+  const readProphecyAloud = useCallback(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+    const synth = window.speechSynthesis;
+    stopNarration();
+    const sessionId = speechSessionRef.current;
+
+    const utterance = new SpeechSynthesisUtterance(oracleLines.join(" "));
+    const voices = synth.getVoices();
+    const preferredVoice = pickSpeechVoice(voices, ["zira", "aria", "jenny", "samantha", "davis", "david"]);
+
+    if (preferredVoice) utterance.voice = preferredVoice;
+    utterance.rate = 0.93;
+    utterance.pitch = 1.02;
+
+    utterance.onstart = () => {
+      if (speechSessionRef.current !== sessionId) return;
+      setActiveNarrationScene("prophecy");
+    };
+    utterance.onend = () => {
+      if (speechSessionRef.current !== sessionId) return;
+      speechUtteranceRef.current = null;
+      setActiveNarrationScene(null);
+    };
+    utterance.onerror = () => {
+      if (speechSessionRef.current !== sessionId) return;
+      speechUtteranceRef.current = null;
+      setActiveNarrationScene(null);
+    };
+
+    speechUtteranceRef.current = utterance;
+    synth.speak(utterance);
+  }, [oracleLines, stopNarration]);
+
+  const readBlessingAloud = useCallback(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+    const synth = window.speechSynthesis;
+    stopNarration();
+    const sessionId = speechSessionRef.current;
+    const voices = synth.getVoices();
+
+    const segments = [
+      {
+        text: `Olympus throne room. Title bestowed: ${victoryProfile.title}. Blessing of Poseidon. ${QUEST_HERO_NAME}, ${victoryProfile.blessingLine}`,
+        rate: 0.9,
+        pitch: 0.94,
+        voiceHints: ["david", "guy", "daniel", "matthew", "alex"],
+      },
+      ...BLESSING_MESSAGES.map((message) => ({
+        text: `${message.speaker} says: ${message.text}`,
+        rate: message.rate,
+        pitch: message.pitch,
+        voiceHints: message.voiceHints,
+      })),
+    ];
+
+    const speakSegment = (index: number) => {
+      if (speechSessionRef.current !== sessionId) return;
+
+      const segment = segments[index];
+      if (!segment) {
+        speechUtteranceRef.current = null;
+        setActiveNarrationScene(null);
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(segment.text);
+      const preferredVoice = pickSpeechVoice(voices, segment.voiceHints);
+      if (preferredVoice) utterance.voice = preferredVoice;
+      utterance.rate = segment.rate;
+      utterance.pitch = segment.pitch;
+
+      utterance.onstart = () => {
+        if (speechSessionRef.current !== sessionId) return;
+        setActiveNarrationScene("blessing");
+      };
+      utterance.onend = () => {
+        if (speechSessionRef.current !== sessionId) return;
+        speakSegment(index + 1);
+      };
+      utterance.onerror = () => {
+        if (speechSessionRef.current !== sessionId) return;
+        speakSegment(index + 1);
+      };
+
+      speechUtteranceRef.current = utterance;
+      synth.speak(utterance);
+    };
+
+    speakSegment(0);
+  }, [victoryProfile, stopNarration]);
+
   const startPuzzle = () => {
+    stopNarration();
     winTriggeredRef.current = false;
     setBoard(createInitialBoard());
     setMovesUsed(0);
     setHistory([]);
+    setHintsUsed(0);
+    setUndosUsed(0);
     setFocusedGateKey(null);
+    setWinScene("prophecy");
     setHintText("Route water to Seal A, Seal B, and Seal C before moves run out.");
     setPhase("puzzle");
   };
@@ -431,6 +641,7 @@ export default function PercyPuzzlePage() {
     setHistory((prev) => prev.slice(0, -1));
     setBoard(previous);
     setMovesUsed((prev) => Math.max(0, prev - 1));
+    setUndosUsed((prev) => prev + 1);
     setFocusedGateKey(null);
     setHintText("Last move undone.");
   };
@@ -446,6 +657,7 @@ export default function PercyPuzzlePage() {
 
   const showHint = () => {
     if (phase !== "puzzle") return;
+    setHintsUsed((prev) => prev + 1);
     const nextGate = getNextMisalignedGate(board);
 
     if (!nextGate) {
@@ -460,11 +672,12 @@ export default function PercyPuzzlePage() {
 
   useEffect(() => {
     return () => {
+      stopNarration();
       if (!audioRef.current) return;
       void audioRef.current.close().catch(() => undefined);
       audioRef.current = null;
     };
-  }, []);
+  }, [stopNarration]);
 
   useEffect(() => {
     if (phase !== "puzzle") return;
@@ -475,6 +688,7 @@ export default function PercyPuzzlePage() {
     winTriggeredRef.current = true;
     markSolved("percy");
     setHintText("All temple seals are powered. The tide stabilizes.");
+    setWinScene("prophecy");
 
     const timer = window.setTimeout(() => setPhase("won"), 650);
     return () => window.clearTimeout(timer);
@@ -499,19 +713,29 @@ export default function PercyPuzzlePage() {
     }
   }, [phase, movesUsed, poweredCount, outOfMoves]);
 
+  useEffect(() => {
+    if (phase !== "won") {
+      stopNarration();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (winScene === "prophecy") {
+        readProphecyAloud();
+        return;
+      }
+
+      readBlessingAloud();
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+  }, [phase, winScene, readProphecyAloud, readBlessingAloud, stopNarration]);
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#031322] text-slate-100">
-      <PercySeaBackdrop phase={phase} />
+      <PercySeaBackdrop phase={phase} winScene={winScene} />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-7 sm:py-10">
-        <div className="pointer-events-none absolute right-0 top-6 hidden lg:block">
-          <img
-            src={percyHero}
-            alt="Percy silhouette"
-            className="h-64 w-auto object-contain opacity-20 drop-shadow-[0_0_40px_rgba(34,211,238,0.45)]"
-          />
-        </div>
-
         <motion.button
           onClick={() => navigate("/hub")}
           className="mb-6 flex items-center gap-2 text-slate-300 hover:text-cyan-100 transition-colors cursor-pointer"
@@ -761,30 +985,173 @@ export default function PercyPuzzlePage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="mx-auto max-w-4xl rounded-3xl border border-cyan-300/25 bg-slate-950/55 p-6 sm:p-10 text-center backdrop-blur-md"
+              className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-cyan-300/25 bg-slate-950/60 p-6 sm:p-8 md:p-10 backdrop-blur-md"
             >
-              <div className="mx-auto mb-5 w-full max-w-xl overflow-hidden rounded-2xl border border-cyan-300/25">
-                <img src={percyHero} alt="Percy victory art" className="h-40 sm:h-52 w-full object-cover opacity-80" />
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_12%,rgba(34,211,238,0.16),transparent_45%),radial-gradient(circle_at_80%_14%,rgba(234,179,8,0.18),transparent_40%)]" />
+                <motion.div
+                  className="absolute -top-12 left-6 h-40 w-40 rounded-full bg-cyan-300/20 blur-2xl"
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.35, 0.6, 0.35] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  className="absolute -bottom-14 right-10 h-48 w-48 rounded-full bg-amber-300/20 blur-2xl"
+                  animate={{ scale: [1, 1.25, 1], opacity: [0.28, 0.52, 0.28] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                />
               </div>
-              <h2 className="text-3xl sm:text-5xl font-display font-bold text-cyan-100">Poseidon's Seal Restored</h2>
-              <p className="mt-4 text-base sm:text-lg text-slate-200/90 leading-relaxed">
-                All three temple seals are powered. The sea currents stabilize, the storm breaks, and Camp Half-Blood
-                is safe again.
-              </p>
-              <div className="mt-7 flex flex-wrap justify-center gap-3">
-                <button
-                  onClick={() => navigate("/hub")}
-                  className="rounded-full border border-cyan-200/60 bg-cyan-500/20 px-7 py-3 font-semibold text-cyan-100 hover:bg-cyan-500/33 transition-colors cursor-pointer"
-                >
-                  Return to Hub
-                </button>
-                <button
-                  onClick={startPuzzle}
-                  className="rounded-full border border-slate-300/35 bg-slate-900/55 px-7 py-3 font-semibold text-slate-200 hover:bg-slate-800/75 transition-colors cursor-pointer"
-                >
-                  Replay Challenge
-                </button>
-              </div>
+
+              <AnimatePresence mode="wait">
+                {winScene === "prophecy" ? (
+                  <motion.div
+                    key="won-prophecy"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    className="relative z-10"
+                  >
+                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-cyan-200/45 bg-cyan-500/16">
+                      <ScrollText className="h-8 w-8 text-cyan-100" />
+                    </div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/85 text-center">Camp Half-Blood Oracle</p>
+                    <h2 className="mt-3 text-center text-3xl sm:text-5xl font-display font-bold text-cyan-100">The Oracle Speaks</h2>
+
+                    <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-amber-200/35 bg-gradient-to-b from-[#201109]/90 via-[#2d1a0d]/85 to-[#1b120a]/90 p-5 sm:p-7 text-amber-50 shadow-[0_24px_90px_rgba(0,0,0,0.45)]">
+                      <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-amber-200/80">Saltwind Prophecy for {QUEST_HERO_NAME}</p>
+                      <div className="mt-4 space-y-3 text-sm sm:text-lg leading-relaxed">
+                        {oracleLines.map((line, idx) => (
+                          <motion.p
+                            key={line}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.16 + 0.1 }}
+                            className="text-amber-100/95"
+                          >
+                            {line}
+                          </motion.p>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap justify-center gap-2.5">
+                      <InfoChip label="Moves" value={`${movesUsed}/${MAX_MOVES}`} accent="cyan" />
+                      <InfoChip label="Hints Used" value={`${hintsUsed}`} accent="cyan" />
+                      <InfoChip label="Undos" value={`${undosUsed}`} accent="cyan" />
+                    </div>
+
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        onClick={activeNarrationScene === "prophecy" ? stopNarration : readProphecyAloud}
+                        disabled={!narrationSupported}
+                        className="inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-cyan-500/12 px-5 py-2.5 text-sm font-medium text-cyan-100 hover:bg-cyan-500/22 disabled:opacity-45 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      >
+                        {activeNarrationScene === "prophecy" ? <Square className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                        {activeNarrationScene === "prophecy" ? "Stop Narration" : "Read Prophecy Aloud"}
+                      </button>
+                    </div>
+                    {!narrationSupported && (
+                      <p className="mt-2 text-center text-xs text-slate-300/80">
+                        Voice narration is unavailable in this browser.
+                      </p>
+                    )}
+
+                    <div className="mt-7 flex flex-wrap justify-center gap-3">
+                      <button
+                        onClick={() => {
+                          stopNarration();
+                          setWinScene("blessing");
+                        }}
+                        className="inline-flex items-center gap-2 rounded-full border border-amber-200/60 bg-amber-400/18 px-7 py-3 font-semibold text-amber-100 hover:bg-amber-400/28 transition-colors cursor-pointer"
+                      >
+                        <Crown className="h-4 w-4" />
+                        Ascend to Olympus
+                      </button>
+                      <button
+                        onClick={startPuzzle}
+                        className="rounded-full border border-slate-300/35 bg-slate-900/55 px-7 py-3 font-semibold text-slate-200 hover:bg-slate-800/75 transition-colors cursor-pointer"
+                      >
+                        Replay Challenge
+                      </button>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="won-blessing"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    className="relative z-10"
+                  >
+                    <div className="mx-auto mb-5 flex max-w-3xl flex-wrap items-center justify-center gap-2.5">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/35 bg-cyan-500/10 px-4 py-2 text-xs uppercase tracking-[0.16em] text-cyan-100/90">
+                        <Crown className="h-3.5 w-3.5" />
+                        Olympus Throne Room
+                      </div>
+                      <div className="inline-flex rounded-full border border-amber-300/35 bg-amber-400/10 px-4 py-2 text-xs uppercase tracking-[0.14em] text-amber-100/90">
+                        Title Bestowed: {victoryProfile.title}
+                      </div>
+                    </div>
+
+                    <h2 className="text-center text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-[0.02em] text-cyan-100">
+                      Blessing of Poseidon
+                    </h2>
+                    <div className="mx-auto mt-3 h-px w-48 bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
+                    <p className="mx-auto mt-4 max-w-2xl text-center text-base sm:text-lg text-slate-100/90 leading-relaxed">
+                      {QUEST_HERO_NAME}, {victoryProfile.blessingLine}
+                    </p>
+
+                    <div className="mx-auto mt-7 grid max-w-5xl gap-3 sm:grid-cols-3">
+                      {BLESSING_MESSAGES.map((message) => (
+                        <BlessingNote key={message.speaker} speaker={message.speaker} text={message.text} />
+                      ))}
+                    </div>
+
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        onClick={activeNarrationScene === "blessing" ? stopNarration : readBlessingAloud}
+                        disabled={!narrationSupported}
+                        className="inline-flex items-center gap-2 rounded-full border border-cyan-200/50 bg-cyan-500/12 px-5 py-2.5 text-sm font-medium text-cyan-100 hover:bg-cyan-500/22 disabled:opacity-45 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      >
+                        {activeNarrationScene === "blessing" ? <Square className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                        {activeNarrationScene === "blessing" ? "Stop Voices" : "Hear Percy, Annabeth, and Grover"}
+                      </button>
+                    </div>
+                    {!narrationSupported && (
+                      <p className="mt-2 text-center text-xs text-slate-300/80">
+                        Voice narration is unavailable in this browser.
+                      </p>
+                    )}
+
+                    <div className="mt-8 flex flex-wrap justify-center gap-3">
+                      <button
+                        onClick={() => {
+                          stopNarration();
+                          navigate("/hub");
+                        }}
+                        className="inline-flex items-center gap-2 rounded-full border border-cyan-200/60 bg-cyan-500/24 px-7 py-3 font-semibold text-cyan-100 hover:bg-cyan-500/36 transition-colors cursor-pointer"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Return to Hub
+                      </button>
+                      <button
+                        onClick={() => {
+                          stopNarration();
+                          setWinScene("prophecy");
+                        }}
+                        className="rounded-full border border-amber-300/45 bg-amber-500/12 px-7 py-3 font-semibold text-amber-100 hover:bg-amber-500/22 transition-colors cursor-pointer"
+                      >
+                        Read Prophecy Again
+                      </button>
+                      <button
+                        onClick={startPuzzle}
+                        className="rounded-full border border-slate-300/35 bg-slate-900/55 px-7 py-3 font-semibold text-slate-200 hover:bg-slate-800/75 transition-colors cursor-pointer"
+                      >
+                        Replay Challenge
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.section>
           )}
         </AnimatePresence>
@@ -885,6 +1252,20 @@ function InfoChip({ label, value, accent }: { label: string; value: string; acce
   );
 }
 
+function BlessingNote({ speaker, text }: { speaker: string; text: string }) {
+  return (
+    <motion.div
+      className="h-full rounded-xl border border-cyan-300/20 bg-[linear-gradient(165deg,rgba(5,19,35,0.78),rgba(8,26,48,0.6))] p-3.5 text-left shadow-[0_10px_35px_rgba(2,10,20,0.35)]"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <p className="text-[11px] uppercase tracking-[0.2em] text-cyan-100/80">{speaker}</p>
+      <p className="mt-1.5 text-sm leading-relaxed text-slate-100/90">{text}</p>
+    </motion.div>
+  );
+}
+
 function LegendRow({ label, glyph }: { label: string; glyph: "source" | "seal" | "oneway" | "whirlpool" }) {
   return (
     <div className="mt-2 flex items-center gap-2 text-xs text-slate-200">
@@ -899,12 +1280,20 @@ function LegendRow({ label, glyph }: { label: string; glyph: "source" | "seal" |
   );
 }
 
-function PercySeaBackdrop({ phase }: { phase: PercyPhase }) {
+function PercySeaBackdrop({ phase, winScene }: { phase: PercyPhase; winScene: PercyWinScene }) {
   const stormy = phase === "intro" || phase === "puzzle";
+  const olympusGlow = phase === "won" && winScene === "blessing";
+  const prophecyCalm = phase === "won" && winScene === "prophecy";
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(34,211,238,0.2),transparent_42%),radial-gradient(circle_at_84%_22%,rgba(59,130,246,0.16),transparent_40%),linear-gradient(180deg,#031322_0%,#06223f_45%,#031523_100%)]" />
+      <div
+        className={`absolute inset-0 ${
+          olympusGlow
+            ? "bg-[radial-gradient(circle_at_18%_14%,rgba(34,211,238,0.22),transparent_40%),radial-gradient(circle_at_80%_16%,rgba(250,204,21,0.28),transparent_38%),linear-gradient(180deg,#08182b_0%,#0c3049_48%,#271a09_100%)]"
+            : "bg-[radial-gradient(circle_at_18%_12%,rgba(34,211,238,0.2),transparent_42%),radial-gradient(circle_at_84%_22%,rgba(59,130,246,0.16),transparent_40%),linear-gradient(180deg,#031322_0%,#06223f_45%,#031523_100%)]"
+        }`}
+      />
 
       {[0, 1, 2].map((layer) => (
         <motion.div
@@ -913,7 +1302,9 @@ function PercySeaBackdrop({ phase }: { phase: PercyPhase }) {
           style={{
             height: `${270 + layer * 54}px`,
             bottom: `${-140 + layer * 60}px`,
-            background: `linear-gradient(180deg, rgba(56,189,248,${0.1 - layer * 0.02}), rgba(8,47,73,${0.62 - layer * 0.09}))`,
+            background: olympusGlow
+              ? `linear-gradient(180deg, rgba(251,191,36,${0.11 - layer * 0.02}), rgba(30,64,90,${0.55 - layer * 0.08}))`
+              : `linear-gradient(180deg, rgba(56,189,248,${0.1 - layer * 0.02}), rgba(8,47,73,${0.62 - layer * 0.09}))`,
             filter: "blur(7px)",
           }}
           animate={{ x: layer % 2 === 0 ? [-30, 30, -30] : [32, -32, 32] }}
@@ -924,7 +1315,7 @@ function PercySeaBackdrop({ phase }: { phase: PercyPhase }) {
       {SEA_PARTICLES.map((particle, idx) => (
         <motion.span
           key={`sea-particle-${idx}`}
-          className="absolute rounded-full bg-cyan-200/70"
+          className={`absolute rounded-full ${olympusGlow ? "bg-amber-200/70" : "bg-cyan-200/70"}`}
           style={{ left: `${particle.left}%`, top: `${particle.top}%`, width: 4, height: 4 }}
           animate={{ y: [0, -28, 0], x: [0, 9, 0], opacity: [0.2, 0.92, 0.2], scale: [0.8, 1.25, 0.8] }}
           transition={{
@@ -939,20 +1330,38 @@ function PercySeaBackdrop({ phase }: { phase: PercyPhase }) {
       {LIGHTNING_STREAKS.map((streak, idx) => (
         <motion.div
           key={`lightning-streak-${idx}`}
-          className="absolute h-12 w-[2px] rounded-full bg-cyan-100/75"
+          className={`absolute h-12 w-[2px] rounded-full ${olympusGlow ? "bg-amber-100/65" : "bg-cyan-100/75"}`}
           style={{ left: `${streak.left}%`, top: `${streak.top}%` }}
-          animate={stormy ? { opacity: [0, 0.95, 0], scaleY: [0.7, 1.2, 0.8] } : { opacity: [0, 0.35, 0] }}
+          animate={
+            stormy
+              ? { opacity: [0, 0.95, 0], scaleY: [0.7, 1.2, 0.8] }
+              : prophecyCalm
+              ? { opacity: [0, 0.2, 0] }
+              : { opacity: [0, 0.45, 0] }
+          }
           transition={{ duration: streak.duration, repeat: Infinity, delay: streak.delay, ease: "easeInOut" }}
         />
       ))}
 
       <motion.div
-        className="absolute inset-0 bg-cyan-100"
-        animate={stormy ? { opacity: [0, 0.07, 0, 0.14, 0] } : { opacity: [0, 0.03, 0] }}
+        className={`absolute inset-0 ${olympusGlow ? "bg-amber-100" : "bg-cyan-100"}`}
+        animate={
+          stormy
+            ? { opacity: [0, 0.07, 0, 0.14, 0] }
+            : olympusGlow
+            ? { opacity: [0, 0.06, 0] }
+            : { opacity: [0, 0.03, 0] }
+        }
         transition={{ duration: stormy ? 7 : 9, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-[#020d17]/82 via-transparent to-[#04192c]/68" />
+      <div
+        className={`absolute inset-0 ${
+          olympusGlow
+            ? "bg-gradient-to-t from-[#120d06]/84 via-transparent to-[#0b1e30]/65"
+            : "bg-gradient-to-t from-[#020d17]/82 via-transparent to-[#04192c]/68"
+        }`}
+      />
     </div>
   );
 }

@@ -33,6 +33,7 @@ export default function PortalCard({ world, solved, index }: PortalCardProps) {
   const worldImage = worldImages[world.id];
 
   const navigateToWorld = async () => {
+    stopWorldTheme();
     const route = world.id === "stranger" ? "/world/stranger-things" : `/world/${world.id}`;
 
     if (world.id === "potter") {

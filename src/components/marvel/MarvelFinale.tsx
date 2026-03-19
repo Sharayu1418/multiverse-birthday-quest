@@ -1,49 +1,51 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Props {
   onReturn: () => void;
 }
 
-function MagicParticle({ index }: { index: number }) {
-  const colors = [
-    "hsl(var(--marvel-gold))",
-    "hsl(var(--marvel-red))",
-    "hsl(var(--cosmic-purple))",
-    "hsl(var(--neon-cyan))",
-  ];
-  const color = colors[index % colors.length];
+function FloatingEmber({ index }: { index: number }) {
+  const gold = "hsl(40 90% 55%)";
+  const red = "hsl(0 70% 50%)";
+  const color = index % 3 === 0 ? red : gold;
   const left = Math.random() * 100;
-  const delay = Math.random() * 3;
-  const size = Math.random() * 6 + 3;
+  const size = 1.5 + Math.random() * 2.5;
 
   return (
     <motion.div
       className="absolute rounded-full"
       style={{
         left: `${left}%`,
+        bottom: "-5%",
         width: size,
         height: size,
-        backgroundColor: color,
-        top: `${Math.random() * 100}%`,
+        background: color,
+        boxShadow: `0 0 ${size * 2}px ${color}`,
       }}
       animate={{
-        y: [0, -30, 0],
-        opacity: [0, 1, 0],
-        scale: [0.5, 1, 0.5],
+        y: [0, -(200 + Math.random() * 400)],
+        x: [0, (Math.random() - 0.5) * 80],
+        opacity: [0, 0.8, 0],
       }}
-      transition={{ duration: 3 + Math.random() * 2, delay, repeat: Infinity }}
+      transition={{
+        duration: 4 + Math.random() * 4,
+        delay: Math.random() * 5,
+        repeat: Infinity,
+        ease: "easeOut",
+      }}
     />
   );
 }
 
 export default function MarvelFinale({ onReturn }: Props) {
+  const [showContent, setShowContent] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setShowMessage(true), 2000);
-    return () => clearTimeout(t);
+    const t1 = setTimeout(() => setShowContent(true), 800);
+    const t2 = setTimeout(() => setShowMessage(true), 2800);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
@@ -54,84 +56,179 @@ export default function MarvelFinale({ onReturn }: Props) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
     >
-      {/* Floating particles */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 30 }).map((_, i) => (
-          <MagicParticle key={i} index={i} />
+      {/* Vignette */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, transparent 30%, hsl(0 0% 0% / 0.6) 100%)",
+        }}
+      />
+
+      {/* Rising embers */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {Array.from({ length: 20 }, (_, i) => (
+          <FloatingEmber key={i} index={i} />
         ))}
       </div>
 
-      {/* Portal orb */}
+      {/* Central warm glow */}
       <motion.div
-        className="w-32 h-32 sm:w-44 sm:h-44 rounded-full flex items-center justify-center mb-8"
-        initial={{ scale: 0, rotate: 0 }}
-        animate={{ scale: 1, rotate: 360 }}
-        transition={{ duration: 1.5, ease: "easeOut" }}
+        className="absolute w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] rounded-full pointer-events-none"
         style={{
-          background: "linear-gradient(135deg, hsl(var(--marvel-gold)), hsl(var(--marvel-red)), hsl(var(--cosmic-purple)))",
-          boxShadow: "0 0 60px hsl(var(--marvel-gold) / 0.5), 0 0 120px hsl(var(--cosmic-purple) / 0.3)",
+          background:
+            "radial-gradient(circle, hsl(40 90% 55% / 0.08) 0%, hsl(0 70% 50% / 0.04) 50%, transparent 80%)",
         }}
-      >
-        <Sparkles className="w-14 h-14 sm:w-18 sm:h-18 text-primary-foreground" />
-      </motion.div>
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 2, ease: "easeOut" }}
+      />
 
-      <motion.h2
-        className="text-2xl sm:text-4xl font-display font-bold mb-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 0.8 }}
-        style={{
-          color: "hsl(var(--marvel-gold))",
-          textShadow: "0 0 30px hsl(var(--marvel-gold) / 0.6)",
-        }}
-      >
-        Marvel Timeline Restored
-      </motion.h2>
-
-      <motion.p
-        className="text-muted-foreground font-body text-base mb-8 max-w-md"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 0.8 }}
-      >
-        The Marvel timeline is stable again.
-      </motion.p>
-
-      {showMessage && (
+      <motion.div className="relative z-10 flex flex-col items-center max-w-md">
+        {/* Snap ring animation */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="space-y-6"
+          className="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center mb-10"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          {/* Birthday message area */}
-          <div
-            className="px-8 py-6 rounded-2xl max-w-md mx-auto mb-4"
+          {/* Outer ring */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
             style={{
-              background: "hsl(var(--marvel-gold) / 0.05)",
-              border: "1px solid hsl(var(--marvel-gold) / 0.2)",
+              border: "1.5px solid hsl(40 70% 50% / 0.4)",
+              boxShadow: "0 0 30px hsl(40 70% 50% / 0.15)",
             }}
-          >
-            <p className="text-muted-foreground font-body text-base italic">
-              🎂 Your birthday message goes here. 🌟
-            </p>
-          </div>
-
-          <motion.button
-            onClick={onReturn}
-            className="px-10 py-4 rounded-full font-body font-semibold text-lg cursor-pointer
-              transition-all duration-300 hover:scale-105"
-            whileTap={{ scale: 0.95 }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          />
+          {/* Inner pulse */}
+          <motion.div
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full"
             style={{
-              background: "linear-gradient(135deg, hsl(var(--marvel-gold)), hsl(var(--marvel-red)))",
-              color: "hsl(var(--primary-foreground))",
-              boxShadow: "0 0 30px hsl(var(--marvel-gold) / 0.4)",
+              background:
+                "radial-gradient(circle, hsl(40 80% 55% / 0.3), transparent 70%)",
             }}
-          >
-            Return to Multiverse
-          </motion.button>
+            animate={{
+              boxShadow: [
+                "0 0 20px hsl(40 80% 55% / 0.2)",
+                "0 0 40px hsl(40 80% 55% / 0.4)",
+                "0 0 20px hsl(40 80% 55% / 0.2)",
+              ],
+            }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+          {/* Six infinity stone dots in a circle */}
+          {[
+            { color: "hsl(0 70% 50%)", angle: 0 },
+            { color: "hsl(270 60% 55%)", angle: 60 },
+            { color: "hsl(210 70% 55%)", angle: 120 },
+            { color: "hsl(40 80% 55%)", angle: 180 },
+            { color: "hsl(140 50% 50%)", angle: 240 },
+            { color: "hsl(30 80% 55%)", angle: 300 },
+          ].map((stone, i) => {
+            const r = 32;
+            const rad = (stone.angle * Math.PI) / 180;
+            return (
+              <motion.div
+                key={i}
+                className="absolute rounded-full"
+                style={{
+                  width: 4,
+                  height: 4,
+                  background: stone.color,
+                  boxShadow: `0 0 8px ${stone.color}`,
+                  left: `calc(50% + ${Math.cos(rad) * r}px - 2px)`,
+                  top: `calc(50% + ${Math.sin(rad) * r}px - 2px)`,
+                }}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: [0.4, 1, 0.4], scale: 1 }}
+                transition={{
+                  opacity: { delay: 0.5 + i * 0.1, duration: 2.5, repeat: Infinity },
+                  scale: { delay: 0.5 + i * 0.1, duration: 0.4 },
+                }}
+              />
+            );
+          })}
         </motion.div>
-      )}
+
+        {/* Title */}
+        <AnimatePresence>
+          {showContent && (
+            <>
+              <motion.h2
+                className="text-xl sm:text-3xl font-display font-bold mb-2 tracking-wide"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                style={{
+                  color: "hsl(var(--marvel-gold))",
+                  textShadow: "0 0 20px hsl(var(--marvel-gold) / 0.3)",
+                }}
+              >
+                Marvel Timeline Restored
+              </motion.h2>
+
+              <motion.div
+                className="w-20 h-px mb-6"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, hsl(var(--marvel-gold) / 0.5), transparent)",
+                }}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+              />
+
+              <motion.p
+                className="font-body text-sm sm:text-base mb-10 leading-relaxed"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                style={{ color: "hsl(var(--foreground) / 0.5)" }}
+              >
+                The timeline is stable once more.
+              </motion.p>
+            </>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="flex flex-col items-center space-y-8"
+            >
+              <p
+                className="font-body text-sm sm:text-base italic max-w-sm leading-relaxed"
+                style={{ color: "hsl(var(--foreground) / 0.7)" }}
+              >
+                "Part of the journey is the end."
+              </p>
+
+              <motion.button
+                onClick={onReturn}
+                className="px-8 py-2.5 rounded-md font-body font-medium text-sm tracking-wider uppercase cursor-pointer
+                  transition-all duration-300"
+                whileHover={{
+                  boxShadow: "0 0 25px hsl(var(--marvel-gold) / 0.3)",
+                }}
+                whileTap={{ scale: 0.97 }}
+                style={{
+                  background: "transparent",
+                  border: "1px solid hsl(var(--marvel-gold) / 0.5)",
+                  color: "hsl(var(--marvel-gold))",
+                  letterSpacing: "0.12em",
+                }}
+              >
+                Return to Multiverse
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </motion.div>
   );
 }

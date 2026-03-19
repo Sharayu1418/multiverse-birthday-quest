@@ -464,7 +464,7 @@ export default function MaraudersMapMaze() {
               ref={fatLadyVideoRef}
               src={FAT_LADY_VIDEO_SRC}
               playsInline
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               style={{ background: "black" }}
             />
             <motion.button
@@ -502,7 +502,7 @@ export default function MaraudersMapMaze() {
             <div className="w-full max-w-2xl bg-[#3e2723]/10 p-6 rounded text-center border border-[#3e2723]/30 min-h-[140px] flex items-center justify-center">
               {typedPhrase === "" ? (
                 <span className="text-xl text-[#3e2723]/50 animate-pulse font-serif">
-                  Speak the words (type) to reveal our secrets...
+                  Type the words to reveal my secrets...
                 </span>
               ) : (
                 <span
