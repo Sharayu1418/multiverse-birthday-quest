@@ -41,6 +41,7 @@ export default function StrangerThingsSignal() {
   const [currentFlash, setCurrentFlash] = useState<number | null>(null);
   const [revealedNumbers, setRevealedNumbers] = useState<number[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [shake, setShake] = useState(false);
   const [hint, setHint] = useState(false);
   const [monsterProximity, setMonsterProximity] = useState(0);
@@ -583,8 +584,12 @@ export default function StrangerThingsSignal() {
                 <motion.div animate={shake ? { x: [-8, 8, -8, 8, 0] } : {}}>
                   <input type="text" value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Type the decoded message..."
-                    className="w-full px-3 py-2 rounded-lg border font-mono text-center text-xs sm:text-sm tracking-wider uppercase focus:outline-none focus:ring-2 transition-all"
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
+                    placeholder={isInputFocused ? "" : "Type the decoded message..."}
+                    className={`w-full px-3 py-2 rounded-lg border font-mono text-xs sm:text-sm tracking-wider uppercase focus:outline-none focus:ring-2 transition-all ${
+                      isInputFocused || inputValue ? "text-left" : "text-center"
+                    }`}
                     style={{
                       background: "hsl(0 10% 8%)",
                       borderColor: `hsl(0 ${40 + monsterProximity * 30}% ${25 + monsterProximity * 15}%)`,

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowUp, ArrowDown, ArrowRight, RotateCcw, ScrollText } from "lucide-react";
+import { ArrowLeft, ArrowUp, ArrowDown, ArrowRight, RotateCcw } from "lucide-react";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import MapParchment from "./MapParchment";
 import { useToast } from "@/hooks/use-toast";
@@ -790,10 +790,13 @@ export default function MaraudersMapMaze() {
               className="text-center space-y-6 bg-white/50 p-12 rounded-2xl border-2 border-[#3e2723] shadow-2xl">
               <h2 className="text-4xl lg:text-6xl font-display font-bold text-[#3e2723] mb-2" style={{ fontFamily: "'Brush Script MT', cursive, serif" }}>Mischief Managed!</h2>
               <p className="text-xl text-[#3e2723]/80 font-display">The Fat Lady swings open. Welcome to the Gryffindor Common Room!</p>
-              <motion.div className="w-24 h-24 mx-auto rounded-full flex items-center justify-center my-8"
-                style={{ background: "linear-gradient(135deg, #d4af37, #f3e5ab)", boxShadow: "0 0 30px rgba(212, 175, 55, 0.6)" }}
+              <motion.div className="mx-auto my-8 flex items-center justify-center"
                 initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", delay: 0.5 }}>
-                <ScrollText className="h-10 w-10 text-[#3e2723]" />
+                <img
+                  src="/images/closed%20map.webp"
+                  alt="Closed Marauder's Map"
+                  className="h-40 w-auto object-contain sm:h-44 lg:h-48"
+                />
               </motion.div>
               <button onClick={() => navigate("/hub")} className="bg-[#3e2723] text-[#e8cd9c] px-8 py-4 rounded-full font-display text-xl hover:bg-[#2a1714] transition-colors shadow-xl">Return to Hub</button>
             </motion.div>

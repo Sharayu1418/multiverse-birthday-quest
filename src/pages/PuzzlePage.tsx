@@ -7,10 +7,15 @@ import { checkAnswer, getHint } from "@/lib/puzzleLogic";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { ArrowLeft, Sparkles } from "lucide-react";
 
-export default function PuzzlePage() {
-  const { worldId } = useParams<{ worldId: string }>();
+interface PuzzlePageProps {
+  forcedWorldId?: WorldId;
+}
+
+export default function PuzzlePage({ forcedWorldId }: PuzzlePageProps) {
+  const { worldId: paramWorldId } = useParams<{ worldId: string }>();
   const navigate = useNavigate();
   const { isSolved, markSolved } = useGameProgress();
+  const worldId = forcedWorldId ?? paramWorldId;
 
   const world = worlds.find((w) => w.id === worldId);
 

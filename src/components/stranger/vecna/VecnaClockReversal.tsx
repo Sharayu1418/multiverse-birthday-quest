@@ -6,7 +6,6 @@ import ClockFace from "./ClockFace";
 import PortalRift from "./PortalRift";
 import ColorSequenceDisplay, { type ToneColor, COLOR_MAP } from "./ColorSequenceDisplay";
 import SequenceInputButtons from "./SequenceInputButtons";
-import { playSuccessAudio } from "./successAudio";
 import vecnaClockImg from "@/assets/vecna_clock.jpg";
 
 type Phase = "entry" | "playing" | "input" | "success";
@@ -15,6 +14,7 @@ type Phase = "entry" | "playing" | "input" | "success";
 const FORWARD_SEQUENCE: ToneColor[] = ["green", "blue", "red", "yellow", "blue", "red"];
 // Correct answer (reversed)
 const ANSWER: ToneColor[] = ["red", "blue", "yellow", "red", "blue", "green"];
+const VECNA_SONG_SRC = "/audio/vecna song.mp3";
 
 function playTone(freq: number, duration = 0.35) {
   try {
@@ -33,6 +33,20 @@ function playTone(freq: number, duration = 0.35) {
   } catch {}
 }
 
+function stopAudio(audio: HTMLAudioElement | null) {
+  if (!audio) return;
+  audio.pause();
+  audio.currentTime = 0;
+}
+
+function playVecnaSong(volume: number) {
+  const audio = new Audio(VECNA_SONG_SRC);
+  audio.volume = volume;
+  audio.loop = false;
+  void audio.play().catch(() => undefined);
+  return audio;
+}
+
 export default function VecnaClockReversal() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("entry");
@@ -46,8 +60,8 @@ export default function VecnaClockReversal() {
   const [lightningStrike, setLightningStrike] = useState(false);
   const [portalCollapse, setPortalCollapse] = useState(0);
   const [vinesRetreat, setVinesRetreat] = useState(false);
-  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const audioRef = useRef<AudioContext | null>(null);
+  const entryAudioRef = useRef<HTMLAudioElement | null>(null);
+  const gateAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Ambient lightning (random flashes during play)
   const [ambientFlash, setAmbientFlash] = useState(false);
@@ -80,31 +94,13 @@ export default function VecnaClockReversal() {
   // ─── ENTRY ───
   useEffect(() => {
     if (phase !== "entry") return;
-    try {
-      const ctx = new AudioContext();
-      audioRef.current = ctx;
-      const tick = () => {
-        if (ctx.state === "closed") return;
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = "square";
-        o.frequency.value = 800;
-        g.gain.value = 0.07;
-        g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05);
-        o.connect(g);
-        g.connect(ctx.destination);
-        o.start();
-        o.stop(ctx.currentTime + 0.06);
-      };
-      tickRef.current = setInterval(tick, 1000);
-    } catch {}
+    stopAudio(entryAudioRef.current);
+    entryAudioRef.current = playVecnaSong(0.55);
     const t = setTimeout(() => setPhase("playing"), 4500);
     return () => {
       clearTimeout(t);
-      if (tickRef.current) clearInterval(tickRef.current);
-      if (audioRef.current && audioRef.current.state !== "closed") {
-        try { audioRef.current.close(); } catch {}
-      }
+      stopAudio(entryAudioRef.current);
+      entryAudioRef.current = null;
     };
   }, [phase]);
 
@@ -157,10 +153,6 @@ export default function VecnaClockReversal() {
       }
 
       if (next.length === ANSWER.length) {
-        if (tickRef.current) clearInterval(tickRef.current);
-        if (audioRef.current && audioRef.current.state !== "closed") {
-          try { audioRef.current.close(); } catch {}
-        }
         setPhase("success");
       }
     },
@@ -168,7 +160,7 @@ export default function VecnaClockReversal() {
   );
 
   // ─── SUCCESS ───
-  const successAudioRef = useRef<{ stop: () => void } | null>(null);
+  const successAudioRef = gateAudioRef;
 
   useEffect(() => {
     if (phase !== "success") return;
@@ -176,13 +168,17 @@ export default function VecnaClockReversal() {
     const t2 = setTimeout(() => setLightningStrike(true), 1200);
     const t3 = setTimeout(() => setLightningStrike(false), 1600);
     const t4 = setTimeout(() => setVinesRetreat(true), 1400);
-    // Clock starts spinning → trigger synth audio (synced: 2s of spin)
     const t5 = setTimeout(() => {
       setClockSpinning(true);
-      successAudioRef.current = playSuccessAudio();
+      stopAudio(successAudioRef.current);
+      successAudioRef.current = playVecnaSong(0.62);
     }, 2000);
-    // Clock stops at 11:11 → audio cuts abruptly (handled inside successAudio at 2s mark)
-    const t6 = setTimeout(() => { setClockSpinning(false); setClockStopped(true); }, 4000);
+    const t6 = setTimeout(() => {
+      setClockSpinning(false);
+      setClockStopped(true);
+      stopAudio(successAudioRef.current);
+      successAudioRef.current = null;
+    }, 4000);
     const t7 = setTimeout(() => {
       const start = Date.now();
       const animate = () => {
@@ -194,10 +190,20 @@ export default function VecnaClockReversal() {
     }, 2200);
     return () => {
       [t1, t2, t3, t4, t5, t6, t7].forEach(clearTimeout);
-      if (successAudioRef.current) successAudioRef.current.stop();
+      stopAudio(successAudioRef.current);
+      successAudioRef.current = null;
     };
   }, [phase]);
 
+  
+  useEffect(() => {
+    return () => {
+      stopAudio(entryAudioRef.current);
+      stopAudio(gateAudioRef.current);
+      entryAudioRef.current = null;
+      gateAudioRef.current = null;
+    };
+  }, []);
   const isSuccess = phase === "success";
 
   return (
@@ -517,3 +523,4 @@ export default function VecnaClockReversal() {
     </div>
   );
 }
+
