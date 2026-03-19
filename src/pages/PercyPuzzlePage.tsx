@@ -46,6 +46,7 @@ const BOARD_COLS = 8;
 const MAX_MOVES = 28;
 const TOTAL_SEALS = 3;
 const QUEST_HERO_NAME = "Shivani";
+const PERCY_ENTRY_VIDEO_CODE = "ryoq6n";
 
 const DIR_ORDER: Dir[] = ["N", "E", "S", "W"];
 const DELTA: Record<Dir, { x: number; y: number }> = {
@@ -119,6 +120,17 @@ interface BlessingMessage {
   rate: number;
   pitch: number;
   voiceHints: string[];
+}
+
+interface StreamableVideoFile {
+  url?: string;
+}
+
+interface StreamableVideoResponse {
+  files?: {
+    mp4?: StreamableVideoFile;
+    "mp4-mobile"?: StreamableVideoFile;
+  };
 }
 
 const BLESSING_MESSAGES: BlessingMessage[] = [
@@ -447,6 +459,10 @@ export default function PercyPuzzlePage() {
   const alreadySolved = isSolved("percy");
 
   const [phase, setPhase] = useState<PercyPhase>(alreadySolved ? "won" : "intro");
+  const [showArrivalVideo, setShowArrivalVideo] = useState(true);
+  const [arrivalVideoUrl, setArrivalVideoUrl] = useState<string | null>(null);
+  const [arrivalVideoError, setArrivalVideoError] = useState<string | null>(null);
+  const [isLoadingArrivalVideo, setIsLoadingArrivalVideo] = useState(true);
   const [board, setBoard] = useState<Cell[][]>(() => createInitialBoard());
   const [movesUsed, setMovesUsed] = useState(0);
   const [history, setHistory] = useState<Cell[][][]>([]);
@@ -460,6 +476,7 @@ export default function PercyPuzzlePage() {
   const audioRef = useRef<AudioContext | null>(null);
   const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const speechSessionRef = useRef(0);
+  const arrivalVideoRef = useRef<HTMLVideoElement | null>(null);
   const playTone = useMemo(() => createTonePlayer(audioRef), []);
   const narrationSupported = typeof window !== "undefined" && "speechSynthesis" in window;
 
@@ -586,6 +603,40 @@ export default function PercyPuzzlePage() {
 
     speakSegment(0);
   }, [victoryProfile, stopNarration]);
+
+  const loadArrivalVideo = useCallback(async () => {
+    if (arrivalVideoUrl) {
+      setIsLoadingArrivalVideo(false);
+      return;
+    }
+
+    setIsLoadingArrivalVideo(true);
+    setArrivalVideoError(null);
+
+    try {
+      const response = await fetch(`https://api.streamable.com/videos/${PERCY_ENTRY_VIDEO_CODE}`);
+      if (!response.ok) {
+        throw new Error("Unable to load video");
+      }
+
+      const data = (await response.json()) as StreamableVideoResponse;
+      const resolvedUrl = data.files?.mp4?.url ?? data.files?.["mp4-mobile"]?.url;
+
+      if (!resolvedUrl) {
+        throw new Error("Missing video source");
+      }
+
+      setArrivalVideoUrl(resolvedUrl.startsWith("//") ? `https:${resolvedUrl}` : resolvedUrl);
+    } catch {
+      setArrivalVideoError("The Percy Jackson intro could not load right now.");
+    } finally {
+      setIsLoadingArrivalVideo(false);
+    }
+  }, [arrivalVideoUrl]);
+
+  const finishArrivalVideo = useCallback(() => {
+    setShowArrivalVideo(false);
+  }, []);
 
   const startPuzzle = () => {
     stopNarration();
@@ -714,6 +765,39 @@ export default function PercyPuzzlePage() {
   }, [phase, movesUsed, poweredCount, outOfMoves]);
 
   useEffect(() => {
+    if (!showArrivalVideo) return;
+    void loadArrivalVideo();
+  }, [loadArrivalVideo, showArrivalVideo]);
+
+  useEffect(() => {
+    if (!showArrivalVideo || !arrivalVideoUrl) return;
+
+    const video = arrivalVideoRef.current;
+    if (!video) return;
+
+    const tryPlay = () => {
+      void video.play().catch(() => undefined);
+    };
+
+    if (video.readyState >= 2) {
+      tryPlay();
+    }
+
+    video.addEventListener("loadedmetadata", tryPlay);
+    video.addEventListener("canplay", tryPlay);
+
+    return () => {
+      video.removeEventListener("loadedmetadata", tryPlay);
+      video.removeEventListener("canplay", tryPlay);
+    };
+  }, [arrivalVideoUrl, showArrivalVideo]);
+
+  useEffect(() => {
+    if (showArrivalVideo) {
+      stopNarration();
+      return;
+    }
+
     if (phase !== "won") {
       stopNarration();
       return;
@@ -729,7 +813,67 @@ export default function PercyPuzzlePage() {
     }, 450);
 
     return () => window.clearTimeout(timer);
-  }, [phase, winScene, readProphecyAloud, readBlessingAloud, stopNarration]);
+  }, [phase, winScene, readProphecyAloud, readBlessingAloud, stopNarration, showArrivalVideo]);
+
+  if (showArrivalVideo) {
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-[#031322] text-slate-100">
+        <PercySeaBackdrop phase={phase} winScene={winScene} />
+
+        <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-6">
+          <motion.section
+            className="w-full max-w-5xl overflow-hidden rounded-[2rem] border border-cyan-300/25 bg-slate-950/65 shadow-[0_30px_120px_rgba(2,12,27,0.55)] backdrop-blur-md"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="border-b border-cyan-300/15 px-5 py-4 text-center sm:px-6">
+              <p className="text-[11px] uppercase tracking-[0.28em] text-cyan-100/75">Camp Half-Blood Arrival</p>
+            </div>
+
+            <div className="p-3 sm:p-4">
+              {isLoadingArrivalVideo && (
+                <div className="flex min-h-[min(72vh,640px)] items-center justify-center rounded-[1.4rem] bg-slate-950/80">
+                  <p className="text-sm uppercase tracking-[0.24em] text-cyan-100/70">Opening Percy Jackson World</p>
+                </div>
+              )}
+
+              {!isLoadingArrivalVideo && arrivalVideoUrl && (
+                <video
+                  ref={arrivalVideoRef}
+                  src={arrivalVideoUrl}
+                  autoPlay
+                  controls
+                  preload="auto"
+                  playsInline
+                  className="h-[min(78vh,720px)] w-full rounded-[1.4rem] bg-slate-950 object-contain"
+                  onEnded={finishArrivalVideo}
+                />
+              )}
+
+              {!isLoadingArrivalVideo && arrivalVideoError && (
+                <div className="flex min-h-[min(72vh,640px)] flex-col items-center justify-center gap-5 rounded-[1.4rem] bg-slate-950/80 px-6 text-center">
+                  <p className="text-base text-slate-200/88">{arrivalVideoError}</p>
+                  <button
+                    onClick={loadArrivalVideo}
+                    className="rounded-full border border-cyan-200/60 bg-cyan-500/18 px-6 py-3 font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/28 cursor-pointer"
+                  >
+                    Retry Intro
+                  </button>
+                  <button
+                    onClick={finishArrivalVideo}
+                    className="rounded-full border border-slate-300/25 bg-slate-900/65 px-6 py-3 font-semibold text-slate-100 transition-colors hover:bg-slate-800/70 cursor-pointer"
+                  >
+                    Continue to Camp Half-Blood
+                  </button>
+                </div>
+              )}
+            </div>
+          </motion.section>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#031322] text-slate-100">
