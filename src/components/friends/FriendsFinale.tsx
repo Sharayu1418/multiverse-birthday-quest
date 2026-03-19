@@ -154,7 +154,7 @@ export default function FriendsFinale({ onReturn }: Props) {
                   Special Clip
                 </p>
                 <p className="text-sm sm:text-base font-medium" style={{ color: "hsl(var(--foreground))" }}>
-                  Your gang is waiting for you
+                  The one where your gang steals the spotlight
                 </p>
               </div>
               {hasFinishedVideo && (

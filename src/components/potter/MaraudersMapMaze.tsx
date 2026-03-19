@@ -759,7 +759,7 @@ export default function MaraudersMapMaze() {
                 <motion.button onClick={handleSubmitPassword}
                   initial={{ scale: 0 }} animate={{ scale: 1 }}
                   className="bg-[#740001] text-[#d4af37] px-8 py-3 rounded-full font-display font-bold text-lg hover:bg-[#8B0000] transition-colors shadow-xl border-2 border-[#d4af37]">
-                  Speak Password ✨
+                  Speak Password
                 </motion.button>
               )}
             </div>
