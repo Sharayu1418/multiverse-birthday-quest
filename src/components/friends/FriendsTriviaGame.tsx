@@ -311,17 +311,23 @@ export default function FriendsTriviaGame() {
           {phase === "trivia" && (
             <motion.div
               key="trivia"
-              className="w-full max-w-2xl space-y-8"
+              className="w-full max-w-2xl space-y-4 sm:space-y-5"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
+              {/* Progressive image reveal */}
+              <CouchScene
+                revealedCount={revealedCount}
+                totalTiles={QUESTIONS.length}
+              />
+
               {/* Progress dots */}
-              <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="flex items-center justify-center gap-2 pt-1">
                 {QUESTIONS.map((_, i) => (
                   <div
                     key={i}
-                    className="w-3 h-3 rounded-full transition-all duration-300"
+                    className="h-3 w-3 rounded-full transition-all duration-300"
                     style={{
                       background:
                         i < revealedCount
@@ -337,12 +343,6 @@ export default function FriendsTriviaGame() {
                   />
                 ))}
               </div>
-
-              {/* Progressive image reveal */}
-              <CouchScene
-                revealedCount={revealedCount}
-                totalTiles={QUESTIONS.length}
-              />
 
               {/* Question or reveal text */}
               <AnimatePresence mode="wait">

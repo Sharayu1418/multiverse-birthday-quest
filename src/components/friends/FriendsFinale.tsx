@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 
 interface Props {
@@ -26,6 +26,7 @@ export default function FriendsFinale({ onReturn }: Props) {
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [hasFinishedVideo, setHasFinishedVideo] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const t1 = setTimeout(() => setShowText(true), 1000);
@@ -36,11 +37,7 @@ export default function FriendsFinale({ onReturn }: Props) {
     };
   }, []);
 
-  const openGangVideo = async () => {
-    setShowVideoPlayer(true);
-    setVideoError(null);
-    setHasFinishedVideo(false);
-
+  const loadGangVideo = useCallback(async (showFailure = true) => {
     if (videoUrl || isLoadingVideo) return;
 
     setIsLoadingVideo(true);
@@ -59,12 +56,57 @@ export default function FriendsFinale({ onReturn }: Props) {
       }
 
       setVideoUrl(resolvedUrl.startsWith("//") ? `https:${resolvedUrl}` : resolvedUrl);
+      setVideoError(null);
     } catch {
-      setVideoError("The video could not load inside the app right now. Try again in a moment.");
+      if (showFailure) {
+        setVideoError("The video could not load inside the app right now. Try again in a moment.");
+      }
     } finally {
       setIsLoadingVideo(false);
     }
+  }, [isLoadingVideo, videoUrl]);
+
+  const openGangVideo = async () => {
+    setShowVideoPlayer(true);
+    setVideoError(null);
+    setHasFinishedVideo(false);
+
+    if (videoUrl && videoRef.current) {
+      videoRef.current.currentTime = 0;
+      void videoRef.current.play().catch(() => undefined);
+      return;
+    }
+
+    await loadGangVideo(true);
   };
+
+  useEffect(() => {
+    if (!showActions) return;
+    void loadGangVideo(false);
+  }, [loadGangVideo, showActions]);
+
+  useEffect(() => {
+    if (!showVideoPlayer || !videoUrl) return;
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    const tryPlay = () => {
+      void video.play().catch(() => undefined);
+    };
+
+    if (video.readyState >= 2) {
+      tryPlay();
+    }
+
+    video.addEventListener("loadedmetadata", tryPlay);
+    video.addEventListener("canplay", tryPlay);
+
+    return () => {
+      video.removeEventListener("loadedmetadata", tryPlay);
+      video.removeEventListener("canplay", tryPlay);
+    };
+  }, [showVideoPlayer, videoUrl]);
 
   return (
     <motion.div
@@ -134,8 +176,11 @@ export default function FriendsFinale({ onReturn }: Props) {
               {!isLoadingVideo && videoUrl && (
                 <video
                   key={videoUrl}
+                  ref={videoRef}
                   src={videoUrl}
+                  autoPlay
                   controls
+                  preload="auto"
                   playsInline
                   className="w-full rounded-xl object-contain max-h-[min(54dvh,560px)]"
                   style={{ background: "hsl(25 20% 6%)" }}
