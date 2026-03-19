@@ -1,23 +1,90 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Props {
   onStart: () => void;
 }
 
+interface StreamableVideoFile {
+  url?: string;
+}
+
+interface StreamableVideoResponse {
+  files?: {
+    mp4?: StreamableVideoFile;
+    "mp4-mobile"?: StreamableVideoFile;
+  };
+}
+
+const MARVEL_INTRO_VIDEO_CODE = "6ft5jh";
+
 export default function MarvelIntro({ onStart }: Props) {
   const [showButton, setShowButton] = useState(false);
   const [portalActive, setPortalActive] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [isLoadingVideo, setIsLoadingVideo] = useState(true);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const [requiresPlaybackStart, setRequiresPlaybackStart] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const [canSkip, setCanSkip] = useState(false);
+  const loadIntroVideo = useCallback(async () => {
+    if (videoUrl) {
+      setIsLoadingVideo(false);
+      return;
+    }
+
+    setIsLoadingVideo(true);
+    setVideoError(null);
+
+    try {
+      const response = await fetch(`https://api.streamable.com/videos/${MARVEL_INTRO_VIDEO_CODE}`);
+      if (!response.ok) {
+        throw new Error("Unable to load video");
+      }
+
+      const data = (await response.json()) as StreamableVideoResponse;
+      const resolvedUrl = data.files?.mp4?.url ?? data.files?.["mp4-mobile"]?.url;
+
+      if (!resolvedUrl) {
+        throw new Error("Missing video source");
+      }
+
+      setVideoUrl(resolvedUrl.startsWith("//") ? `https:${resolvedUrl}` : resolvedUrl);
+    } catch {
+      setVideoError("The Marvel intro could not load right now.");
+    } finally {
+      setIsLoadingVideo(false);
+    }
+  }, [videoUrl]);
 
   useEffect(() => {
-    // Show skip option after 10s for replays
-    const skipTimer = setTimeout(() => setCanSkip(true), 10000);
-    // Show button after full video duration (~32s)
-    const t = setTimeout(() => setShowButton(true), 32000);
-    return () => { clearTimeout(t); clearTimeout(skipTimer); };
-  }, []);
+    void loadIntroVideo();
+  }, [loadIntroVideo]);
+
+  useEffect(() => {
+    if (!videoUrl) return;
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    const tryPlay = () => {
+      void video.play()
+        .then(() => setRequiresPlaybackStart(false))
+        .catch(() => setRequiresPlaybackStart(true));
+    };
+
+    if (video.readyState >= 2) {
+      tryPlay();
+    }
+
+    video.addEventListener("loadedmetadata", tryPlay);
+    video.addEventListener("canplay", tryPlay);
+
+    return () => {
+      video.removeEventListener("loadedmetadata", tryPlay);
+      video.removeEventListener("canplay", tryPlay);
+    };
+  }, [videoUrl]);
 
   const handleClick = () => {
     setPortalActive(true);
@@ -26,11 +93,10 @@ export default function MarvelIntro({ onStart }: Props) {
 
   return (
     <motion.div
-      className="relative z-10 flex flex-col items-center justify-center min-h-screen"
+      className="relative z-10 flex min-h-screen flex-col items-center justify-center"
       exit={{ opacity: 0, scale: 1.2 }}
       transition={{ duration: 0.6 }}
     >
-      {/* Portal animation overlay */}
       {portalActive && (
         <motion.div
           className="fixed inset-0 z-50 flex items-center justify-center"
@@ -49,24 +115,42 @@ export default function MarvelIntro({ onStart }: Props) {
         </motion.div>
       )}
 
-      {/* Fullscreen video */}
       <motion.div
-        className="fixed inset-0 z-0"
+        className="fixed inset-0 z-0 bg-black"
         animate={{ opacity: showButton ? 0.3 : 1 }}
         transition={{ duration: 1.5 }}
       >
-        <iframe
-          className="w-full h-full"
-          src="https://streamable.com/e/6ft5jh?autoplay=1&muted=0&loop=0"
-          title="Marvel Intro"
-          frameBorder="0"
-          allow="autoplay; encrypted-media; fullscreen"
-          allowFullScreen
-          style={{ position: "absolute", inset: 0, border: "none" }}
-        />
+        {isLoadingVideo && (
+          <div className="flex h-full w-full items-center justify-center">
+            <p className="text-sm uppercase tracking-[0.24em] text-marvel-gold/80">Opening the multiverse...</p>
+          </div>
+        )}
+
+        {!isLoadingVideo && videoUrl && (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            autoPlay
+            playsInline
+            preload="auto"
+            className="h-full w-full object-cover"
+            onEnded={() => setShowButton(true)}
+          />
+        )}
+
+        {!isLoadingVideo && videoError && (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-5 px-6 text-center">
+            <p className="text-base text-white/85">{videoError}</p>
+            <button
+              onClick={loadIntroVideo}
+              className="rounded-full border border-marvel-gold/60 bg-marvel-gold/10 px-6 py-3 font-semibold text-marvel-gold transition-colors hover:bg-marvel-gold/20 cursor-pointer"
+            >
+              Retry Intro
+            </button>
+          </div>
+        )}
       </motion.div>
 
-      {/* Dark overlay when button appears */}
       {showButton && (
         <motion.div
           className="fixed inset-0 z-10 bg-black/60"
@@ -76,27 +160,29 @@ export default function MarvelIntro({ onStart }: Props) {
         />
       )}
 
-      {/* Skip button for replays */}
-      {!showButton && canSkip && (
+      {!showButton && !isLoadingVideo && videoUrl && requiresPlaybackStart && (
         <motion.button
-          onClick={() => setShowButton(true)}
-          className="fixed bottom-6 z-20 font-body text-sm cursor-pointer hover:opacity-100 transition-opacity"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          whileHover={{ opacity: 1 }}
-          style={{ color: "hsl(var(--marvel-gold))" }}
+          onClick={() => {
+            const video = videoRef.current;
+            if (!video) return;
+            void video.play()
+              .then(() => setRequiresPlaybackStart(false))
+              .catch(() => undefined);
+          }}
+          className="fixed bottom-16 z-20 rounded-full border border-marvel-gold/55 bg-black/60 px-8 py-3 font-body font-semibold text-marvel-gold backdrop-blur-sm transition-colors hover:bg-black/75 cursor-pointer"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
         >
-          Skip to end →
+          Play Intro
         </motion.button>
       )}
 
-      {/* Reveal the Path button */}
       <AnimatePresence>
         {showButton && (
           <motion.button
             onClick={handleClick}
-            className="fixed bottom-16 z-20 px-10 py-4 rounded-full font-body font-semibold text-lg cursor-pointer
-              transition-all duration-300 hover:scale-105"
+            className="fixed bottom-16 z-20 px-10 py-4 rounded-full font-body font-semibold text-lg cursor-pointer transition-all duration-300 hover:scale-105"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}

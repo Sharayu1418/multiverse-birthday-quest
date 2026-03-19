@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowUp, ArrowDown, ArrowRight, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowUp, ArrowDown, ArrowRight, RotateCcw, ScrollText } from "lucide-react";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import MapParchment from "./MapParchment";
 import { useToast } from "@/hooks/use-toast";
@@ -793,7 +793,7 @@ export default function MaraudersMapMaze() {
               <motion.div className="w-24 h-24 mx-auto rounded-full flex items-center justify-center my-8"
                 style={{ background: "linear-gradient(135deg, #d4af37, #f3e5ab)", boxShadow: "0 0 30px rgba(212, 175, 55, 0.6)" }}
                 initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", delay: 0.5 }}>
-                <span className="text-4xl">⚡</span>
+                <ScrollText className="h-10 w-10 text-[#3e2723]" />
               </motion.div>
               <button onClick={() => navigate("/hub")} className="bg-[#3e2723] text-[#e8cd9c] px-8 py-4 rounded-full font-display text-xl hover:bg-[#2a1714] transition-colors shadow-xl">Return to Hub</button>
             </motion.div>
@@ -804,3 +804,4 @@ export default function MaraudersMapMaze() {
     </>
   );
 }
+

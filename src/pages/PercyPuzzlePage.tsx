@@ -43,7 +43,7 @@ interface GateGuide {
 
 const BOARD_ROWS = 6;
 const BOARD_COLS = 8;
-const MAX_MOVES = 28;
+const MAX_MOVES = 20;
 const TOTAL_SEALS = 3;
 const QUEST_HERO_NAME = "Shivani";
 const PERCY_ENTRY_VIDEO_CODE = "ryoq6n";

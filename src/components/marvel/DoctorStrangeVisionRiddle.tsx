@@ -197,6 +197,7 @@ function SlingRingPortal({ onComplete }: { onComplete: () => void }) {
 
 export default function DoctorStrangeVisionRiddle({ onSolved }: Props) {
   const [answer, setAnswer] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [shake, setShake] = useState(false);
   const [showInstruction, setShowInstruction] = useState(false);
@@ -340,8 +341,10 @@ export default function DoctorStrangeVisionRiddle({ onSolved }: Props) {
                   inputMode="numeric"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
+                  onFocus={() => setIsInputFocused(true)}
+                  onBlur={() => setIsInputFocused(false)}
                   onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                  placeholder="..."
+                  placeholder={isInputFocused ? "" : "..."}
                   className="w-full px-4 py-3 rounded-md font-body text-center text-lg tracking-widest
                     focus:outline-none transition-all"
                   style={{
