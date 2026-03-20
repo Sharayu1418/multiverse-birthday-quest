@@ -820,57 +820,53 @@ export default function PercyPuzzlePage() {
       <div className="relative min-h-screen overflow-hidden bg-[#031322] text-slate-100">
         <PercySeaBackdrop phase={phase} winScene={winScene} />
 
-        <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-6">
-          <motion.section
-            className="w-full max-w-5xl overflow-hidden rounded-[2rem] border border-cyan-300/25 bg-slate-950/65 shadow-[0_30px_120px_rgba(2,12,27,0.55)] backdrop-blur-md"
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="border-b border-cyan-300/15 px-5 py-4 text-center sm:px-6">
-              <p className="text-[11px] uppercase tracking-[0.28em] text-cyan-100/75">Camp Half-Blood Arrival</p>
+        <motion.div
+          className="relative z-10 flex min-h-screen items-center justify-center bg-black"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-slate-950/85 via-slate-950/35 to-transparent px-5 py-4 text-center">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-cyan-100/75">Camp Half-Blood Arrival</p>
+          </div>
+
+          {isLoadingArrivalVideo && (
+            <div className="flex min-h-screen w-full items-center justify-center bg-slate-950">
+              <p className="text-sm uppercase tracking-[0.24em] text-cyan-100/70">Opening Percy Jackson World</p>
             </div>
+          )}
 
-            <div className="p-3 sm:p-4">
-              {isLoadingArrivalVideo && (
-                <div className="flex min-h-[min(72vh,640px)] items-center justify-center rounded-[1.4rem] bg-slate-950/80">
-                  <p className="text-sm uppercase tracking-[0.24em] text-cyan-100/70">Opening Percy Jackson World</p>
-                </div>
-              )}
+          {!isLoadingArrivalVideo && arrivalVideoUrl && (
+            <video
+              ref={arrivalVideoRef}
+              src={arrivalVideoUrl}
+              autoPlay
+              controls
+              preload="auto"
+              playsInline
+              className="h-screen w-screen bg-black object-contain"
+              onEnded={finishArrivalVideo}
+            />
+          )}
 
-              {!isLoadingArrivalVideo && arrivalVideoUrl && (
-                <video
-                  ref={arrivalVideoRef}
-                  src={arrivalVideoUrl}
-                  autoPlay
-                  controls
-                  preload="auto"
-                  playsInline
-                  className="h-[min(78vh,720px)] w-full rounded-[1.4rem] bg-slate-950 object-contain"
-                  onEnded={finishArrivalVideo}
-                />
-              )}
-
-              {!isLoadingArrivalVideo && arrivalVideoError && (
-                <div className="flex min-h-[min(72vh,640px)] flex-col items-center justify-center gap-5 rounded-[1.4rem] bg-slate-950/80 px-6 text-center">
-                  <p className="text-base text-slate-200/88">{arrivalVideoError}</p>
-                  <button
-                    onClick={loadArrivalVideo}
-                    className="rounded-full border border-cyan-200/60 bg-cyan-500/18 px-6 py-3 font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/28 cursor-pointer"
-                  >
-                    Retry Intro
-                  </button>
-                  <button
-                    onClick={finishArrivalVideo}
-                    className="rounded-full border border-slate-300/25 bg-slate-900/65 px-6 py-3 font-semibold text-slate-100 transition-colors hover:bg-slate-800/70 cursor-pointer"
-                  >
-                    Continue to Camp Half-Blood
-                  </button>
-                </div>
-              )}
+          {!isLoadingArrivalVideo && arrivalVideoError && (
+            <div className="flex min-h-screen w-full flex-col items-center justify-center gap-5 bg-slate-950/95 px-6 text-center">
+              <p className="text-base text-slate-200/88">{arrivalVideoError}</p>
+              <button
+                onClick={loadArrivalVideo}
+                className="rounded-full border border-cyan-200/60 bg-cyan-500/18 px-6 py-3 font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/28 cursor-pointer"
+              >
+                Retry Intro
+              </button>
+              <button
+                onClick={finishArrivalVideo}
+                className="rounded-full border border-slate-300/25 bg-slate-900/65 px-6 py-3 font-semibold text-slate-100 transition-colors hover:bg-slate-800/70 cursor-pointer"
+              >
+                Continue to Camp Half-Blood
+              </button>
             </div>
-          </motion.section>
-        </div>
+          )}
+        </motion.div>
       </div>
     );
   }

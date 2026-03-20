@@ -433,7 +433,7 @@ export default function MaraudersMapMaze() {
               src={POTTER_VIDEO_SRC}
               playsInline
               onEnded={() => setPhase("locked")}
-              className="w-full h-full object-cover"
+              className="w-full h-full max-w-full max-h-full object-contain"
               style={{ background: "black" }}
             />
             <motion.button

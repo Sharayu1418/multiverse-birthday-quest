@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
+import QuestionCard from "./QuestionCard";
 
 interface Props {
   onReturn: () => void;
@@ -17,10 +18,51 @@ interface StreamableVideoResponse {
 }
 
 const GANG_VIDEO_CODE = "50rhx0";
+const FINALE_GANG_QUESTIONS = [
+  {
+    question: "Who's more likely to plan an entire trip with a full itinerary?",
+    options: ["Shivani", "Hrutik", "Sharayu", "Sahil", "Roshan", "Rajnish"],
+    correctIndex: 2,
+    revealCharacter: "Monica" as const,
+  },
+  {
+    question: "Who's more likely to start dancing out of nowhere?",
+    options: ["Shivani", "Hrutik", "Sharayu", "Sahil", "Roshan", "Rajnish"],
+    correctIndex: 0,
+    revealCharacter: "Phoebe" as const,
+  },
+  {
+    question: "Who's most likely to suggest the craziest challenges in the group for fun?",
+    options: ["Shivani", "Hrutik", "Sharayu", "Sahil", "Roshan", "Rajnish"],
+    correctIndex: 3,
+    revealCharacter: "Joey" as const,
+  },
+  {
+    question: "Who's more likely to say 'I'm on the way' while still at home?",
+    options: ["Shivani", "Hrutik", "Sharayu", "Sahil", "Roshan", "Rajnish"],
+    correctIndex: 4,
+    revealCharacter: "Chandler" as const,
+  },
+  {
+    question: "Who's more likely to cancel all plans and then say 'next time pakka'?",
+    options: ["Shivani", "Hrutik", "Sharayu", "Sahil", "Roshan", "Rajnish"],
+    correctIndex: 1,
+    revealCharacter: "Ross" as const,
+  },
+  {
+    question: "Who's most likely to keep leaving the group chat and then getting added back again?",
+    options: ["Shivani", "Hrutik", "Sharayu", "Sahil", "Roshan", "Rajnish"],
+    correctIndex: 5,
+    revealCharacter: "Rachel" as const,
+  },
+];
 
 export default function FriendsFinale({ onReturn }: Props) {
   const [showText, setShowText] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showFinalQuiz, setShowFinalQuiz] = useState(false);
+  const [quizQuestionIndex, setQuizQuestionIndex] = useState(0);
+  const [gangQuizUnlocked, setGangQuizUnlocked] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
@@ -68,6 +110,7 @@ export default function FriendsFinale({ onReturn }: Props) {
 
   const openGangVideo = async () => {
     setShowVideoPlayer(true);
+    setShowFinalQuiz(false);
     setVideoError(null);
     setHasFinishedVideo(false);
 
@@ -78,6 +121,26 @@ export default function FriendsFinale({ onReturn }: Props) {
     }
 
     await loadGangVideo(true);
+  };
+
+  const handleFinalQuizCorrect = () => {
+    if (quizQuestionIndex + 1 >= FINALE_GANG_QUESTIONS.length) {
+      setGangQuizUnlocked(true);
+      void openGangVideo();
+      return;
+    }
+
+    setQuizQuestionIndex((prev) => prev + 1);
+  };
+
+  const handleGangButtonClick = () => {
+    if (gangQuizUnlocked) {
+      void openGangVideo();
+      return;
+    }
+
+    setQuizQuestionIndex(0);
+    setShowFinalQuiz(true);
   };
 
   useEffect(() => {
@@ -131,6 +194,51 @@ export default function FriendsFinale({ onReturn }: Props) {
         >
           The One Where Shivani Has The Best Birthday!
         </motion.p>
+      )}
+
+      {showFinalQuiz && !showVideoPlayer && (
+        <motion.div
+          className="w-full max-w-2xl space-y-4"
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="space-y-3 text-center">
+            <p
+              className="text-[11px] uppercase tracking-[0.2em]"
+              style={{ color: "hsl(var(--friends-orange) / 0.68)" }}
+            >
+              One Last Friends Round
+            </p>
+            <div className="flex items-center justify-center gap-2">
+              {FINALE_GANG_QUESTIONS.map((_, index) => (
+                <div
+                  key={index}
+                  className="h-2.5 w-2.5 rounded-full transition-all duration-300"
+                  style={{
+                    background:
+                      index < quizQuestionIndex
+                        ? "hsl(var(--friends-orange))"
+                        : index === quizQuestionIndex
+                          ? "hsl(var(--friends-orange) / 0.55)"
+                          : "hsl(25 12% 30% / 0.7)",
+                    boxShadow:
+                      index < quizQuestionIndex
+                        ? "0 0 10px hsl(var(--friends-orange) / 0.55)"
+                        : "none",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <QuestionCard
+            key={`finale-question-${quizQuestionIndex}`}
+            question={FINALE_GANG_QUESTIONS[quizQuestionIndex]}
+            questionNumber={quizQuestionIndex + 1}
+            onCorrect={handleFinalQuizCorrect}
+          />
+        </motion.div>
       )}
 
       {showVideoPlayer && (
@@ -222,7 +330,7 @@ export default function FriendsFinale({ onReturn }: Props) {
         </motion.div>
       )}
 
-      {showActions && (
+      {showActions && !showFinalQuiz && (
         <motion.div
           className="flex flex-col sm:flex-row items-center justify-center gap-3"
           initial={{ opacity: 0 }}
@@ -230,7 +338,7 @@ export default function FriendsFinale({ onReturn }: Props) {
           transition={{ duration: 1 }}
         >
           <motion.button
-            onClick={openGangVideo}
+            onClick={handleGangButtonClick}
             className="px-8 py-2.5 rounded-md font-body font-medium text-sm tracking-wider uppercase cursor-pointer transition-all"
             style={{
               background: "hsl(var(--friends-orange) / 0.12)",
@@ -243,7 +351,7 @@ export default function FriendsFinale({ onReturn }: Props) {
             }}
             whileTap={{ scale: 0.97 }}
           >
-            {showVideoPlayer ? "Watch Your Gang Again" : "Go Take a Look at Your Gang"}
+            {showVideoPlayer ? "Watch Your Gang Again" : gangQuizUnlocked ? "Go Take a Look at Your Gang" : "Answer One About Your Gang"}
           </motion.button>
 
           {hasFinishedVideo && (
