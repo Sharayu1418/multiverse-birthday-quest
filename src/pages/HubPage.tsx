@@ -245,22 +245,11 @@ export default function HubPage() {
                   <div className="absolute -left-10 top-4 h-28 w-28 rounded-full bg-fuchsia-500/10 blur-3xl" />
                   <div className="absolute -right-6 bottom-0 h-28 w-28 rounded-full bg-cyan-400/10 blur-3xl" />
 
-                  <p className="text-[11px] uppercase tracking-[0.26em] text-cyan-100/72">
-                    Your Final Treat Awaits
-                  </p>
-                  <h3 className="mt-3 font-display text-2xl font-bold tracking-wide text-slate-50 sm:text-3xl">
-                    The Portal Is Open
-                  </h3>
-                  <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
-                    Take a peek at what your gang does best. The link is live now and ready to
-                    open.
-                  </p>
-
                   <a
                     href={FINAL_REWARD_URL}
                     target="_blank"
                     rel="noreferrer"
-                    className="group relative mt-6 block rounded-2xl border border-cyan-300/18 bg-black/24 px-4 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-200/32 hover:bg-white/[0.06] sm:px-5"
+                    className="group relative block rounded-2xl border border-cyan-300/18 bg-black/24 px-4 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-200/32 hover:bg-white/[0.06] sm:px-5"
                   >
                     <span className="block text-[10px] uppercase tracking-[0.28em] text-fuchsia-200/68">
                       Click To Open
