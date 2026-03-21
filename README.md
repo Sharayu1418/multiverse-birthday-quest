@@ -1,3 +1,5 @@
+Demo Link: https://multiverse-birthday-quest.vercel.app/
+
 # Multiverse Birthday Quest
 
 Multiverse Birthday Quest is a custom React and TypeScript web experience built as a birthday adventure. The player moves through a set of themed worlds, completes puzzles, unlocks story moments, and restores the multiverse one world at a time.
